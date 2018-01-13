@@ -58,12 +58,19 @@ class PublicKey(object):
     
    def __init__(self, point):
       self.point = point
-  
-   # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses 
-   def hash160(self):
+
+   def getUncompressed(self):
       pub_key = (self.point.X << 256 | self.point.Y)
       pub_key_bytes = pub_key.to_bytes(64, 'big')
-      payload = b'\x04' + pub_key_bytes
+      return b'\x04' + pub_key_bytes
+
+   def getCompressed(self):
+      prefix = b'\x02' if self.point.Y & 1 == 0 else b'\x03'
+      return prefix + self.point.X.to_bytes(32, 'big')
+
+   # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses 
+   def hash160(self, compressed=True):
+      payload =  self.getCompressed() if compressed else self.getUncompressed()
       hash160 = hashlib.new('ripemd160', hashlib.sha256(payload).digest()).digest()
       return hash160
 
