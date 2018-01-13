@@ -10,8 +10,9 @@ Currently supported:
 
 Usage:
 
-```
-$ python3 -i bitcoin.py
+```python
+from lib.elliptic import *
+from lib.address import *
 
 priv_key = generate_random(256)
 print("Private Key: ", hex(priv_key))
