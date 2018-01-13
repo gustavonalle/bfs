@@ -1,5 +1,7 @@
 # Bitcoin from scratch 
 
+[![Build Status](https://travis-ci.org/gustavonalle/bfs.svg?branch=master)](https://travis-ci.org/gustavonalle/bfs/)
+
 Simple Python3 Bitcoin library
 
 Currently supported:
