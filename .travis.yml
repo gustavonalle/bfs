@@ -1,5 +1,8 @@
 language: python
 python:
   - 3.6
+before_install:
+  - pip install pycodestyle
 script:
+ - find . -name \*.py -exec pycodestyle --ignore=E402 --ignore=E501 {} +
  - python -m unittest discover
