@@ -1,23 +1,10 @@
 from enum import Enum
+from lib.utils import Encoder
 
 
 class SpendType(Enum):
     P2PKH = 0
     P2WPKH = 1
-
-
-class Encoder(object):
-
-    @staticmethod
-    def to_varint(n):
-        if n <= 0xfc:
-            return n.to_bytes(1, 'little')
-        if n <= 0xffff:
-            return b'\xfd' + n.to_bytes(2, 'little')
-        if n <= 0xffffffff:
-            return b'\xfe' + n.to_bytes(4, 'little')
-        if n <= 0xffffffffffffffff:
-            return b'\xff' + n.to_bytes(8, 'little')
 
 
 class TransactionInput(object):
@@ -28,7 +15,8 @@ class TransactionInput(object):
         self.spendType = spend_type
 
 
-class Opcode(Enum):
+class Script(object):
+    OP_0 = b'\x00'
     OP_CHECKSIG = b'\xac'
     OP_DUP = b'\x76'
     OP_EQUALVERIFY = b'\x88'
@@ -43,17 +31,14 @@ class TransactionOutput(object):
         self.spendType = spend_type
 
     def lock_script(self):
+        hash_bytes = self.hash160.to_bytes(20, 'big')
+        payload = Encoder.with_size(hash_bytes)
         if self.spendType == SpendType.P2PKH:
-            hash_bytes = self.hash160.to_bytes(20, 'big')
-            hash_size = self.size(hash_bytes)
-            return Opcode.OP_DUP.value + Opcode.OP_HASH160.value + hash_size + hash_bytes + Opcode.OP_EQUALVERIFY.value + Opcode.OP_CHECKSIG.value
-
-    @staticmethod
-    def size(content):
-        s = len(content)
-        return Encoder.to_varint(s)
+            return Script.OP_DUP + Script.OP_HASH160 + payload + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
+        if self.spendType == SpendType.P2WPKH:
+            return Script.OP_0 + payload
 
     def serialize(self):
         amount = self.satoshis.to_bytes(8, 'little')
         script = self.lock_script()
-        return amount + self.size(script) + script
+        return amount + Encoder.with_size(script)

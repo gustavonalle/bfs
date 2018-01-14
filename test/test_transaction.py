@@ -20,7 +20,18 @@ class TestTransaction(unittest.TestCase):
         vout = TransactionOutput(1500000, prev_tx, SpendType.P2PKH)
 
         expect = 0x60e31600000000001976a914ab68025513c3dbd2f7b92a94e0581f5d50f654e788ac
-        self.assertEqual(expect, int.from_bytes(vout.serialize(), 'big'))
+        self.assertEqual(expect, self.to_int(vout.serialize()))
+
+    def test_tx_output_p2wpkh(self):
+        prev_tx = 0xab68025513c3dbd2f7b92a94e0581f5d50f654e7
+        vout = TransactionOutput(1500000, prev_tx, SpendType.P2WPKH)
+
+        expect = 0x60e3160000000000160014ab68025513c3dbd2f7b92a94e0581f5d50f654e7
+        self.assertEqual(expect, self.to_int(vout.serialize()))
+
+    @staticmethod
+    def to_int(b):
+        return int.from_bytes(b, 'big')
 
 
 if __name__ == '__main__':

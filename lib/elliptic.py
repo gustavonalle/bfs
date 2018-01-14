@@ -1,5 +1,8 @@
 import hashlib
 
+from lib import address
+from lib.utils import Encoder
+
 
 class Point(object):
 
@@ -39,11 +42,17 @@ class PublicKey(object):
         return f"Public Key: ({hex(self.point.X)}, {hex(self.point.Y)})"
 
 
+class SigHash(object):
+    ALL = b'\x01'
+
+
 # https://en.wikipedia.org/wiki/Elliptic_curve
 class Curve(object):
     P = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
     G = Point(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
               0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8)
+
+    qlen = P.bit_length()
 
     def has_point(self, point):
         return (point.X ** 3 + 7 - point.Y ** 2) % self.P == 0
@@ -84,3 +93,33 @@ class Curve(object):
 
     def pub_key(self, pk):
         return PublicKey(self.multiply(self.G, pk))
+
+    @staticmethod
+    def int2octets(num, qlen):
+        rlen = (qlen + 7) & ~7
+        return num.to_bytes(rlen, 'big')
+
+    @staticmethod
+    def bits2int(b, qlen):
+        v = int.from_bytes(b, 'big')
+        vlen = v.bit_length()
+        if vlen > qlen:
+            v = v >> (vlen - qlen)
+        return v
+
+    def generate_rfc6979_key(self, private_key, message):
+        hash_m = hashlib.sha256(message).digest()
+        pk = private_key.to_bytes(32, 'big')
+
+    def ecdsa(self, private_key, payload):
+        k = address.generate_random(160)
+        p = self.pub_key(k)
+        r = p.point.X
+        h = hashlib.sha1(payload).digest()
+        z = int.from_bytes(h, 'big')
+        s = (z + private_key * r) * self.inv_mod_p(k) % self.P
+        return r, s
+
+    def sign(self, message, private_key, sig_hash):
+        ecdsa = self.ecdsa(private_key, message)
+        return Encoder.der(ecdsa, sig_hash)
