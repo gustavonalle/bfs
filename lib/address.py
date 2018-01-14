@@ -5,9 +5,8 @@ from enum import Enum
 
 
 class AddressType(Enum):
-    V1 = b'\x00'
-    P2SH = b'\x05'
-    TESTNET = b'\x6f'
+    MAIN_NET = b'\x00'
+    TEST_NET = b'\x6f'
 
 
 MAX_PRIVATE_KEY_VALUE = 1.158 * 10 ** 77

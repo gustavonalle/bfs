@@ -30,11 +30,11 @@ hash160 = pub_key.hash160(compressed = False)
 
 print(f"Hash160: {hash160.hex()}")
 
-# Create V1 Address for mainnet
-addressv1 = create_address_v1(hash160, AddressType.V1)
+# Create V1 Address for main net
+addressv1 = create_address_v1(hash160, AddressType.MAIN_NET)
 
 # Create V1 Address for testnet
-addressv1 = create_address_v1(hash160, AddressType.TESTNET)
+addressv1 = create_address_v1(hash160, AddressType.TEST_NET)
 
 print(f"Address (v1): {addressv1}")
 
