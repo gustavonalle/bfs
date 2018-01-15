@@ -1,6 +1,7 @@
 import hashlib
+import hmac
+import math
 
-from lib import address
 from lib.utils import Encoder
 
 
@@ -48,19 +49,28 @@ class SigHash(object):
 
 # https://en.wikipedia.org/wiki/Elliptic_curve
 class Curve(object):
-    P = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
+    secp256k1_p = 2 ** 256 - 2 ** 32 - 2 ** 9 - 2 ** 8 - 2 ** 7 - 2 ** 6 - 2 ** 4 - 1
     G = Point(0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798,
               0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8)
+    n = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+    h = 0x01
 
-    qlen = P.bit_length()
+    def __init__(self, p=secp256k1_p):
+        self.p = p
+        self.qlen = p.bit_length()
 
     def has_point(self, point):
-        return (point.X ** 3 + 7 - point.Y ** 2) % self.P == 0
+        return (point.X ** 3 + 7 - point.Y ** 2) % self.p == 0
 
     def inv_mod_p(self, x):
-        if x % self.P == 0:
+        if x % self.p == 0:
             raise ZeroDivisionError("Impossible inverse")
-        return pow(x, self.P - 2, self.P)
+        return pow(x, self.p - 2, self.p)
+
+    def inv_mod_n(self, x):
+        if x % self.n == 0:
+            raise ZeroDivisionError("Impossible inverse")
+        return pow(x, self.n - 2, self.n)
 
     def sum(self, p, q):
         if p.is_infinity():
@@ -73,8 +83,8 @@ class Curve(object):
             delta = (3 * p.X ** 2) * self.inv_mod_p(2 * p.Y)
         else:
             delta = (q.Y - p.Y) * self.inv_mod_p(q.X - p.X)
-        xr = (delta ** 2 - p.X - q.X) % self.P
-        yr = (delta * (p.X - xr) - p.Y) % self.P
+        xr = (delta ** 2 - p.X - q.X) % self.p
+        yr = (delta * (p.X - xr) - p.Y) % self.p
         return Point(xr, yr)
 
     def double(self, p):
@@ -94,30 +104,66 @@ class Curve(object):
     def pub_key(self, pk):
         return PublicKey(self.multiply(self.G, pk))
 
-    @staticmethod
-    def int2octets(num, qlen):
-        rlen = (qlen + 7) & ~7
+    def int2octets(self, num):
+        rlen = math.ceil(self.qlen / 8)
         return num.to_bytes(rlen, 'big')
 
-    @staticmethod
-    def bits2int(b, qlen):
+    def bits2int(self, b):
         v = int.from_bytes(b, 'big')
-        vlen = v.bit_length()
-        if vlen > qlen:
-            v = v >> (vlen - qlen)
+        vlen = len(b) * 8
+        if vlen > self.qlen:
+            v = v >> (vlen - self.qlen)
         return v
 
-    def generate_rfc6979_key(self, private_key, message):
-        hash_m = hashlib.sha256(message).digest()
-        pk = private_key.to_bytes(32, 'big')
+    def bits2octets(self, b):
+        z1 = self.bits2int(b)
+        z2 = z1 % self.p
+        return self.int2octets(z2)
+
+    def generate_r(self, pk, message):
+        # step a
+        x = self.int2octets(pk)
+        h1 = self.bits2octets(hashlib.sha256(message).digest())
+        vlen = 32
+        # step b
+        v = b'\x01' * vlen
+
+        # step c
+        k = b'\x00' * vlen
+
+        # step d
+        k = hmac.new(k, v + b'\x00' + x + h1, digestmod=hashlib.sha256).digest()
+
+        # step e
+        v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
+
+        # step f
+        k = hmac.new(k, v + b'\x01' + x + h1, digestmod=hashlib.sha256).digest()
+
+        # step g
+        v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
+
+        # step h
+        while True:
+            t = b''
+            while len(t) < (self.qlen + 7) / 8:
+                v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
+                t += v
+            kc = self.bits2int(t)
+            if 0 < kc < self.p:
+                return kc
+            k = hmac.new(k, v + b'\x00', digestmod=hashlib.sha256).digest()
+            v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
 
     def ecdsa(self, private_key, payload):
-        k = address.generate_random(160)
+        k = self.generate_r(private_key, payload)
         p = self.pub_key(k)
         r = p.point.X
-        h = hashlib.sha1(payload).digest()
-        z = int.from_bytes(h, 'big')
-        s = (z + private_key * r) * self.inv_mod_p(k) % self.P
+        h = hashlib.sha256(payload).digest()
+        hm = int.from_bytes(h, 'big') % self.n
+        s = self.inv_mod_n(k) * (hm + private_key * r) % self.n
+        if s > self.n / 2:
+            s = -1 * s % self.n
         return r, s
 
     def sign(self, message, private_key, sig_hash):

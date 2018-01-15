@@ -1,5 +1,6 @@
-from lib.elliptic import *
 import unittest
+
+from lib.elliptic import *
 
 
 class TestCurve(unittest.TestCase):
@@ -24,22 +25,39 @@ class TestCurve(unittest.TestCase):
         self.assertEqual(c.G, c.sum(infinity, c.G))
 
     def test_bits2int(self):
-        c = Curve
         n = 0x9305A46DE7FF8EB107194DEBD3FD48AA20D5E7656CBE0EA69D2A8D4E7C67314A
         q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
+        c = Curve(q)
 
-        res = c.bits2int(n.to_bytes(32, 'big'), q.bit_length())
-        self.assertEqual(0x4982D236F3FFC758838CA6F5E9FEA455106AF3B2B, res)
+        res = c.bits2int(n.to_bytes(32, 'big'))
+        self.assertEqual("0x4982d236f3ffc758838ca6f5e9fea455106af3b2b", hex(res))
 
     def test_int2octets(self):
-        c = Curve
         x = 0x09A4D6792295A7F730FC3F2B49CBC0F62E862272F
         q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
+        c = Curve(q)
 
-        res = c.int2octets(x, q.bit_length())
-        self.assertEqual(0x009A4D6792295A7F730FC3F2B49CBC0F62E862272F, int.from_bytes(res, 'big'))
+        res = c.int2octets(x)
+        self.assertEqual("009a4d6792295a7f730fc3f2b49cbc0f62e862272f", res.hex())
 
-    @unittest.skip("WIP")
+    def test_bits2octets(self):
+        x = 0xAF2BDBE1AA9B6EC1E2ADE1D694F41FC71A831D0268E9891562113D8A62ADD1BF.to_bytes(32, 'big')
+        q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
+        c = Curve(q)
+
+        res = c.bits2octets(x)
+        self.assertEqual("01795edf0d54db760f156d0dac04c0322b3a204224", res.hex())
+
+    def test_generate_r(self):
+        x = 0x09A4D6792295A7F730FC3F2B49CBC0F62E862272F
+        q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
+        c = Curve(q)
+        msg = "sample".encode()
+
+        res = c.generate_r(x, msg)
+
+        self.assertEqual("0x23af4074c90a02b3fe61d286d5c87f425e6bdd81b", hex(res))
+
     def test_sign(self):
         # Test Vectors for RFC 6979 ECDSA, secp256k1, SHA-256
         # (private key, message, expected k, expected signature)
@@ -63,8 +81,17 @@ class TestCurve(unittest.TestCase):
 
         c = Curve()
 
-        signature = c.sign(test_vectors[0][1].encode(), test_vectors[0][0], SigHash.ALL)
-        self.assertEqual(test_vectors[0][3], signature.hex())
+        for item in test_vectors:
+            private_key = item[0]
+            message = item[1].encode()
+            expected_k = item[2]
+            expected_signature = item[3]
+
+            rfc6979_key = c.generate_r(private_key, message)
+            ecdsa = c.ecdsa(private_key, message)
+
+            self.assertEqual(expected_k, rfc6979_key)
+            self.assertEqual(expected_signature, format(ecdsa[0],'x') + format(ecdsa[1],'x'))
 
 
 if __name__ == '__main__':
