@@ -91,7 +91,7 @@ class TestCurve(unittest.TestCase):
             ecdsa = c.ecdsa(private_key, message)
 
             self.assertEqual(expected_k, rfc6979_key)
-            self.assertEqual(expected_signature, format(ecdsa[0],'x') + format(ecdsa[1],'x'))
+            self.assertEqual(expected_signature, format(ecdsa[0], 'x') + format(ecdsa[1], 'x'))
 
 
 if __name__ == '__main__':
