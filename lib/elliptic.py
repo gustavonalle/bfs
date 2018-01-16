@@ -168,4 +168,4 @@ class Curve(object):
 
     def sign(self, message, private_key, sig_hash):
         ecdsa = self.ecdsa(private_key, message)
-        return Encoder.der(ecdsa, sig_hash)
+        return Encoder.der(ecdsa)

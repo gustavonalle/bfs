@@ -17,9 +17,19 @@ class Encoder(object):
         return Encoder.to_varint(size) + content
 
     @staticmethod
-    def der(ecdsa, sig_hash):
-        int_value = b'\x02'
-        r = ecdsa[0].to_bytes(33, 'big')
-        s = ecdsa[1].to_bytes(33, 'big')
-        payload = int_value + Encoder.with_size(r) + int_value + Encoder.with_size(s) + sig_hash
+    def remove_leading_zeroes(b):
+        b = b.lstrip(b'\x00')
+        if b[0] & 0x80:
+            b = b'\x00' + b
+        return b
+
+    @staticmethod
+    def der(ecdsa):
+        r = ecdsa[0].to_bytes(32, 'big')
+        s = ecdsa[1].to_bytes(32, 'big')
+
+        r = Encoder.remove_leading_zeroes(r)
+        s = Encoder.remove_leading_zeroes(s)
+
+        payload = b'\x02' + Encoder.with_size(r) + b'\x02' + Encoder.with_size(s)
         return b'\x30' + Encoder.with_size(payload)
