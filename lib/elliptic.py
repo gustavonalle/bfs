@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import math
 
+from lib.keys import PublicKey, PrivateKey
 from lib.utils import der
 
 
@@ -16,31 +17,6 @@ class Point(object):
 
     def is_infinity(self):
         return self.X is None and self.Y is None
-
-
-class PublicKey(object):
-
-    def __init__(self, point):
-        self.point = point
-
-    def get_uncompressed(self):
-        pub_key = (self.point.X << 256 | self.point.Y)
-        pub_key_bytes = pub_key.to_bytes(64, 'big')
-        return b'\x04' + pub_key_bytes
-
-    def get_compressed(self):
-        prefix = b'\x02' if self.point.Y & 1 == 0 else b'\x03'
-        return prefix + self.point.X.to_bytes(32, 'big')
-
-    # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
-    def hash160(self, compressed=True):
-        payload = self.get_compressed() if compressed else self.get_uncompressed()
-        digest = hashlib.sha256(payload).digest()
-        hash160 = hashlib.new('ripemd160', digest).digest()
-        return hash160
-
-    def __str__(self):
-        return f"Public Key: ({hex(self.point.X)}, {hex(self.point.Y)})"
 
 
 class SigHash(object):
@@ -102,7 +78,7 @@ class Curve(object):
         return q
 
     def pub_key(self, pk):
-        return PublicKey(self.multiply(self.G, pk))
+        return PublicKey(self.multiply(self.G, pk.value()))
 
     def int2octets(self, num):
         rlen = math.ceil(self.qlen / 8)
@@ -122,7 +98,7 @@ class Curve(object):
 
     def generate_r(self, pk, message):
         # step a
-        x = self.int2octets(pk)
+        x = self.int2octets(pk.value())
         h1 = self.bits2octets(hashlib.sha256(message).digest())
         vlen = 32
         # step b
@@ -151,7 +127,7 @@ class Curve(object):
                 t += v
             kc = self.bits2int(t)
             if 0 < kc < self.p:
-                return kc
+                return PrivateKey(kc)
             k = hmac.new(k, v + b'\x00', digestmod=hashlib.sha256).digest()
             v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
 
@@ -161,7 +137,7 @@ class Curve(object):
         r = p.point.X
         h = hashlib.sha256(payload).digest()
         hm = int.from_bytes(h, 'big') % self.n
-        s = self.inv_mod_n(k) * (hm + private_key * r) % self.n
+        s = self.inv_mod_n(k.value()) * (hm + private_key.value() * r) % self.n
         if s > self.n / 2:
             s = -1 * s % self.n
         return r, s

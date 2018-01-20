@@ -1,6 +1,7 @@
 import unittest
 
 from lib.address import *
+from lib.utils import hash160_from_address
 
 
 class TestAddress(unittest.TestCase):

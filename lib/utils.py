@@ -1,3 +1,9 @@
+import hashlib
+import itertools
+
+BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+
 def to_varint(n):
     if n <= 0xfc:
         return n.to_bytes(1, 'little')
@@ -19,6 +25,34 @@ def remove_leading_zeroes(b):
     if b[0] & 0x80:
         b = b'\x00' + b
     return b
+
+
+def hash160_from_address(address):
+    h = base58_decode(address)
+    b = h.to_bytes(25, 'big')[1:-4]
+    return b
+
+
+def base58_decode(base58):
+    n = 0
+    for d in base58:
+        n = 58 * n + BASE58_DIGITS.index(d)
+    return n
+
+
+def base58_encode(b):
+    payload = int.from_bytes(b, 'big')
+    res = ''
+    while payload > 0:
+        (payload, r) = divmod(payload, 58)
+        res += BASE58_DIGITS[r]
+    for _ in itertools.takewhile(lambda x: x == 0, b):
+        res += BASE58_DIGITS[0]
+    return res[::-1]
+
+
+def double_sha256(b):
+    return hashlib.sha256(hashlib.sha256(b).digest()).digest()
 
 
 def der(ecdsa):

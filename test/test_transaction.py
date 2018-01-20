@@ -1,6 +1,5 @@
 import unittest
 
-from lib.address import hash160_from_address
 from lib.transaction import *
 from lib.utils import *
 

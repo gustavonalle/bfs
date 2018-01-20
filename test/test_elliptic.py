@@ -1,6 +1,7 @@
 import unittest
 
 from lib.elliptic import *
+from lib.keys import PrivateKey
 
 
 class TestCurve(unittest.TestCase):
@@ -54,9 +55,9 @@ class TestCurve(unittest.TestCase):
         c = Curve(q)
         msg = "sample".encode()
 
-        res = c.generate_r(x, msg)
+        res = c.generate_r(PrivateKey(x), msg)
 
-        self.assertEqual("0x23af4074c90a02b3fe61d286d5c87f425e6bdd81b", hex(res))
+        self.assertEqual("0x23af4074c90a02b3fe61d286d5c87f425e6bdd81b", hex(res.value()))
 
     def test_ecdsa(self):
         # Test Vectors for RFC 6979 ECDSA, secp256k1, SHA-256
@@ -94,15 +95,15 @@ class TestCurve(unittest.TestCase):
         c = Curve()
 
         for item in test_vectors:
-            private_key = item[0]
+            pk = item[0]
             message = item[1].encode()
             expected_k = item[2]
             expected_signature = item[3]
 
-            rfc6979_key = c.generate_r(private_key, message)
-            ecdsa = c.ecdsa(private_key, message)
+            rfc6979_key = c.generate_r(PrivateKey(pk), message)
+            ecdsa = c.ecdsa(PrivateKey(pk), message)
 
-            self.assertEqual(expected_k, rfc6979_key)
+            self.assertEqual(expected_k, rfc6979_key.value())
             self.assertEqual(expected_signature, format(ecdsa[0], 'x') + format(ecdsa[1], 'x'))
 
     def test_DER(self):
@@ -164,7 +165,7 @@ class TestCurve(unittest.TestCase):
             message = item[1]
             expected_der = item[2]
 
-            signature = c.sign(message.encode(), pk, SigHash.ALL)
+            signature = c.sign(message.encode(), PrivateKey(pk), SigHash.ALL)
 
             self.assertEqual(expected_der, signature.hex(), message)
 

@@ -13,11 +13,12 @@ Currently supported:
 Usage:
 
 ```python
+from lib.keys import *
 from lib.elliptic import *
 from lib.address import *
 
-priv_key = generate_random(256)
-print("Private Key: ", hex(priv_key))
+priv_key = PrivateKey()
+print("Private Key: ", priv_key)
 
 pub_key = Curve().pub_key(priv_key)
 print(pub_key)
