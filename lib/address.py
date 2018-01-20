@@ -10,6 +10,7 @@ class AddressType(Enum):
 
 
 MAX_PRIVATE_KEY_VALUE = 1.158 * 10 ** 77
+BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 # https://en.bitcoin.it/wiki/Base58Check_encoding
@@ -21,15 +22,27 @@ def create_address_v1(n, address_type):
     return base58_encode(step4)
 
 
+def hash160_from_address(address):
+    h = base58_decode(address)
+    b = h.to_bytes(25, 'big')[1:-4]
+    return b
+
+
+def base58_decode(base58):
+    n = 0
+    for d in base58:
+        n = 58 * n + BASE58_DIGITS.index(d)
+    return n
+
+
 def base58_encode(b):
-    digits = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
     payload = int.from_bytes(b, 'big')
     res = ''
     while payload > 0:
         (payload, r) = divmod(payload, 58)
-        res += digits[r]
+        res += BASE58_DIGITS[r]
     for _ in itertools.takewhile(lambda x: x == 0, b):
-        res += digits[0]
+        res += BASE58_DIGITS[0]
     return res[::-1]
 
 
