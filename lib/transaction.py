@@ -1,7 +1,7 @@
 import binascii
 from enum import Enum
 
-from lib.utils import *
+from lib.commons import *
 
 
 class SpendType(Enum):

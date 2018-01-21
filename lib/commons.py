@@ -1,7 +1,13 @@
 import hashlib
 import itertools
+from enum import Enum
 
 BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+
+class Network(Enum):
+    MAIN_NET = b'\x00'
+    TEST_NET = b'\x6f'
 
 
 def to_varint(n):
@@ -51,8 +57,38 @@ def base58_encode(b):
     return res[::-1]
 
 
+def sha256(b):
+    return hashlib.sha256(b).digest()
+
+
 def double_sha256(b):
-    return hashlib.sha256(hashlib.sha256(b).digest()).digest()
+    return sha256(sha256(b))
+
+
+def from_wif(wif):
+    start = wif[0]
+    compressed = False
+    if start == "L" or start == "K" or start == "c" or start == "9":
+        compressed = True
+    decoded = base58_decode(wif)
+    b = decoded.to_bytes(decoded.bit_length() // 8, 'big')
+    if compressed:
+        b = b[1:-5]
+    else:
+        b = b[1:-4]
+    return int.from_bytes(b, 'big')
+
+
+def to_wif(b, network, compressed=False):
+    prefix = b'\x80'
+    if network == Network.TEST_NET:
+        prefix = b'\xef'
+    wif = prefix + b
+    if compressed:
+        wif += b'\x01'
+    checksum = double_sha256(wif)[0:4:]
+    wif += checksum
+    return base58_encode(wif)
 
 
 def der(ecdsa):

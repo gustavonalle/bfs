@@ -1,6 +1,8 @@
 import hashlib
 import secrets
 
+from lib import commons
+
 
 class PrivateKey(object):
     MAX_PRIVATE_KEY_VALUE = 1.158 * 10 ** 77
@@ -12,6 +14,11 @@ class PrivateKey(object):
         else:
             self.key = value
 
+    @classmethod
+    def from_wif(cls, wif):
+        pk = commons.from_wif(wif)
+        return PrivateKey(pk)
+
     def generate_random(self, nbits):
         key = secrets.randbits(nbits)
         if key < self.MAX_PRIVATE_KEY_VALUE:
@@ -22,8 +29,8 @@ class PrivateKey(object):
     def value(self):
         return self.key
 
-    def __str__(self):
-        return f"Private Key: {hex(self.key)}"
+    def to_wif(self, network, compressed):
+        return commons.to_wif(self.key.to_bytes(32, 'big'), network, compressed)
 
 
 class PublicKey(object):

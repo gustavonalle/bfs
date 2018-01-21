@@ -1,7 +1,7 @@
 import unittest
 
 from lib.transaction import *
-from lib.utils import *
+from lib.commons import *
 
 
 class TestTransaction(unittest.TestCase):

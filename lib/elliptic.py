@@ -3,7 +3,7 @@ import hmac
 import math
 
 from lib.keys import PublicKey, PrivateKey
-from lib.utils import der
+from lib.commons import der
 
 
 class Point(object):

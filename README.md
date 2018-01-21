@@ -13,12 +13,11 @@ Currently supported:
 Usage:
 
 ```python
-from lib.keys import *
 from lib.elliptic import *
 from lib.address import *
 
 priv_key = PrivateKey()
-print("Private Key: ", priv_key)
+print("Private Key: ", priv_key.value())
 
 pub_key = Curve().pub_key(priv_key)
 print(pub_key)
@@ -32,10 +31,10 @@ hash160 = pub_key.hash160(compressed = False)
 print(f"Hash160: {hash160.hex()}")
 
 # Create V1 Address for main net
-addressv1 = create_address_v1(hash160, AddressType.MAIN_NET)
+addressv1 = AddressV1(hash160, Network.MAIN_NET)
 
 # Create V1 Address for testnet
-addressv1 = create_address_v1(hash160, AddressType.TEST_NET)
+addressv1 = AddressV1(hash160, Network.TEST_NET)
 
 print(f"Address (v1): {addressv1}")
 
