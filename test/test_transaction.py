@@ -1,7 +1,7 @@
 import unittest
 
+from lib.keys import PrivateKey
 from lib.transaction import *
-from lib.commons import *
 
 
 class TestTransaction(unittest.TestCase):
@@ -116,6 +116,33 @@ class TestTransaction(unittest.TestCase):
         raw = tx.serialize()
 
         self.assertEqual(expected, raw.hex())
+
+    def test_sign_1(self):
+        # Sign simple 1 input tx
+        priv_k = PrivateKey(0x0ecd20654c2e2be708495853e8da35c664247040c00bd10b9b13e5e86e6a808d)
+        print(priv_k.to_wif(Network.MAIN_NET, compressed=True))
+        pub_k = Curve().pub_key(priv_k)
+
+        prev_tx = "96534da2f213367a6d589f18d7d6d1689748cd911f8c33a9aee754a80de166be"
+        prev_script = "76a914dd6cce9f255a8cc17bda8ba0373df8e861cb866e88ac"
+        prev_idx = 0
+
+        address = "1FromKBPAS8MWsk1Yv1Yiu8rJbjfVioBHc"
+        hash160 = int.from_bytes(hash160_from_address(address), 'big')
+        amount = 118307
+
+        tx_in = TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH)
+        tx_out = TransactionOutput(amount, hash160, SpendType.P2PKH)
+
+        tx = Transaction()
+        tx.add_inputs(tx_in)
+        tx.add_outputs(tx_out)
+
+        print(tx.serialize().hex())
+
+        signed = tx.sign(priv_k, pub_k)
+
+        print(signed.serialize(with_hash_code=False).hex())
 
     @staticmethod
     def to_int(b):

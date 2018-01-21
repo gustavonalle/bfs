@@ -165,7 +165,7 @@ class TestCurve(unittest.TestCase):
             message = item[1]
             expected_der = item[2]
 
-            signature = c.sign(message.encode(), PrivateKey(pk), SigHash.ALL)
+            signature = c.sign(message.encode(), PrivateKey(pk))
 
             self.assertEqual(expected_der, signature.hex(), message)
 

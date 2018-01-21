@@ -1,7 +1,8 @@
 import binascii
-from enum import Enum
+import copy
 
 from lib.commons import *
+from lib.elliptic import Curve
 
 
 class SpendType(Enum):
@@ -72,7 +73,7 @@ class Transaction(object):
         for o in tx_outputs:
             self.outputs.append(o)
 
-    def serialize(self):
+    def serialize(self, with_hash_code=False):
         payload = self.version.to_bytes(4, 'little')
         payload += to_varint(len(self.inputs))
         for i in self.inputs:
@@ -81,4 +82,23 @@ class Transaction(object):
         for o in self.outputs:
             payload += o.serialize()
         payload += b'\x00' * 4
+        if with_hash_code:
+            payload += (1).to_bytes(4, 'little')
         return payload
+
+    def sign(self, private_key, public_key):
+        signed_tx = copy.deepcopy(self)
+        pub_key = public_key.get_compressed()
+        for i, tx_input in enumerate(self.inputs):
+            raw = self.serialize()
+            dhash = double_sha256(raw)[::-1]
+            signature = Curve().sign(dhash, private_key)
+            signature = signature + b'\x01'
+            script_sig = to_bytes_with_size(signature) + to_bytes_with_size(pub_key)
+            signed_input = copy.deepcopy(tx_input)
+            signed_input.prev_script = script_sig.hex()
+            signed_tx.replace_input(i, signed_input)
+        return signed_tx
+
+    def replace_input(self, i, signed_input):
+        self.inputs[i] = signed_input

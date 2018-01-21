@@ -142,6 +142,6 @@ class Curve(object):
             s = -1 * s % self.n
         return r, s
 
-    def sign(self, message, private_key, sig_hash):
+    def sign(self, message, private_key):
         ecdsa = self.ecdsa(private_key, message)
         return der(ecdsa)
