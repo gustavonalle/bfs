@@ -2,8 +2,8 @@ import hashlib
 import hmac
 import math
 
-from lib.keys import PublicKey, PrivateKey
 from lib.commons import der
+from lib.keys import PublicKey, PrivateKey
 
 
 class Point(object):
@@ -55,6 +55,8 @@ class Curve(object):
             return p
         if not (self.has_point(p) and self.has_point(q)):
             raise ValueError("Points not part of the curve")
+        if p.X == q.X and p.Y != q.Y:
+            return Point(None, None)
         if p == q:
             delta = (3 * p.X ** 2) * self.inv_mod_p(2 * p.Y)
         else:

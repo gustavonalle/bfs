@@ -25,6 +25,11 @@ class TestCurve(unittest.TestCase):
         self.assertEqual(c.G, c.sum(c.G, infinity))
         self.assertEqual(c.G, c.sum(infinity, c.G))
 
+    def test_multiply(self):
+        infinity = Point(None, None)
+        c = Curve()
+        self.assertEqual(c.multiply(c.G, c.n), infinity)
+
     def test_bits2int(self):
         n = 0x9305A46DE7FF8EB107194DEBD3FD48AA20D5E7656CBE0EA69D2A8D4E7C67314A
         q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
