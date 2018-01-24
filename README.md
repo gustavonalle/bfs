@@ -10,7 +10,9 @@ Currently supported:
 * Genrate pub key - elliptic curve
 * Create V1 addresses
 
-Usage:
+## Usage examples:
+
+### Create v1 addresses:
 
 ```python
 from lib.elliptic import *
