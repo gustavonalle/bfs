@@ -43,6 +43,8 @@ class TransactionOutput(object):
         self.satoshis = satoshis
         self.hash160 = hash160
         self.spendType = spend_type
+        self.index = 0
+        self.tx = None
 
     def lock_script(self):
         hash_bytes = self.hash160.to_bytes(20, 'big')
@@ -70,8 +72,10 @@ class Transaction(object):
             self.inputs.append(i)
 
     def add_outputs(self, *tx_outputs):
-        for o in tx_outputs:
+        for index, o in enumerate(tx_outputs):
             self.outputs.append(o)
+            o.tx = self
+            o.index = index
 
     def serialize(self, with_hash_code=False):
         payload = self.version.to_bytes(4, 'little')

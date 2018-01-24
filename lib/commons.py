@@ -2,6 +2,8 @@ import hashlib
 import itertools
 from enum import Enum
 
+import math
+
 BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
@@ -89,6 +91,14 @@ def to_wif(b, network, compressed=False):
     checksum = double_sha256(wif)[0:4:]
     wif += checksum
     return base58_encode(wif)
+
+
+def btc_to_satoshis(btc):
+    return math.ceil(btc * 1e8)
+
+
+def satoshis_to_btc(satoshis):
+    return satoshis / 1e8
 
 
 def der(ecdsa):
