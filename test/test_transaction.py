@@ -120,7 +120,6 @@ class TestTransaction(unittest.TestCase):
     def test_sign_1(self):
         # Sign simple 1 input tx
         priv_k = PrivateKey(0x0ecd20654c2e2be708495853e8da35c664247040c00bd10b9b13e5e86e6a808d)
-        print(priv_k.to_wif(Network.MAIN_NET, compressed=True))
         pub_k = Curve().pub_key(priv_k)
 
         prev_tx = "96534da2f213367a6d589f18d7d6d1689748cd911f8c33a9aee754a80de166be"
@@ -131,18 +130,19 @@ class TestTransaction(unittest.TestCase):
         hash160 = int.from_bytes(hash160_from_address(address), 'big')
         amount = 118307
 
-        tx_in = TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH)
-        tx_out = TransactionOutput(amount, hash160, SpendType.P2PKH)
-
         tx = Transaction()
-        tx.add_inputs(tx_in)
-        tx.add_outputs(tx_out)
-
-        print(tx.serialize().hex())
+        tx.add_inputs(TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH))
+        tx.add_outputs(TransactionOutput(amount, hash160, SpendType.P2PKH))
 
         signed = tx.sign(priv_k, pub_k)
 
-        print(signed.serialize(with_hash_code=False).hex())
+        expected = ("0100000001be66e10da854e7aea9338c1f91cd489768d1d6d7189f586d7a3613f2a24d539600000000"
+                    "6b483045022100d26da559a61d0156429ee63e31d6b0502a662b8d0fc1a6eb269658ecd436c8aa0220"
+                    "024e474c33b20f8adbcc36ddd01e24562c917ccc1a4b6f21cc7926099a9984c20121032daa93315eeb"
+                    "be2cb9b5c3505df4c6fb6caca8b756786098567550d4820c09dbffffffff0123ce0100000000001976"
+                    "a914a2fd2e039a86dbcf0e1a664729e09e8007f8951088ac00000000")
+
+        self.assertEqual(expected, signed.serialize().hex())
 
     @staticmethod
     def to_int(b):

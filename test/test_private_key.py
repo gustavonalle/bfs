@@ -12,20 +12,18 @@ class TestPrivateKey(TestCase):
     def test_to_from_wif(self):
         for n in range(100):
             pk = PrivateKey()
-            wif_compressed = pk.to_wif(Network.MAIN_NET, compressed=True)
-            wif_uncompressed = pk.to_wif(Network.MAIN_NET, compressed=False)
-            from_wif_compressed = PrivateKey.from_wif(wif_compressed)
-            from_wif_uncompressed = PrivateKey.from_wif(wif_uncompressed)
+            wif = pk.to_wif(Network.MAIN_NET)
+            from_wif = PrivateKey.from_wif(wif)
 
-            self.assertEqual(pk.value(), from_wif_compressed.value())
-            self.assertEqual(pk.value(), from_wif_uncompressed.value())
+            self.assertEqual(pk.value(), from_wif.value())
 
     def test_to_from_address(self):
         # Expected address, pub key, private key (WIF)
 
         vectors = [
             ("1BnxivwaXeg4wfi1Cn8SseJRJ4jJQDQ9rX",
-             "0404dfd44f629a806d1c655951f2de58d6fe2180c3b3530e137576c180df74746b3e62a98051eb8b8aee40bd3f015f10e5f9a9513cbf879e4e357e53736ac4e240",
+             "0404dfd44f629a806d1c655951f2de58d6fe2180c3b3530e137576c180df74746"
+             "b3e62a98051eb8b8aee40bd3f015f10e5f9a9513cbf879e4e357e53736ac4e240",
              "5KjtMvquu4y59HBRN68dsTLrvVWCo4eoW769myKJfFQCtskzrEW"),
             ("16L4aHuU9Krc27qxCEJePAtxomtJPbz21B",
              "042aae9ea9c3aafd929ac41e2ac6a380484347975f6282c5e96c47dfccad609af2"
@@ -74,19 +72,16 @@ class TestPrivateKey(TestCase):
         for item in vectors:
             expected_address = item[0]
             public_key_hex = item[1]
-            compressed = not public_key_hex.startswith("04")
             private_key_wif = item[2]
 
             priv_key = PrivateKey.from_wif(private_key_wif)
-            self.assertEqual(private_key_wif, priv_key.to_wif(Network.MAIN_NET, compressed))
+            self.assertEqual(private_key_wif, priv_key.to_wif(Network.MAIN_NET))
 
             pub_key = Curve().pub_key(priv_key)
-            if compressed:
-                self.assertEqual(pub_key.get_compressed().hex(), public_key_hex)
-            else:
-                self.assertEqual(pub_key.get_uncompressed().hex(), public_key_hex)
 
-            hash160 = pub_key.hash160(compressed)
+            self.assertEqual(pub_key.get_value().hex(), public_key_hex)
+
+            hash160 = pub_key.hash160()
             address = AddressV1(hash160, Network.MAIN_NET)
             self.assertEqual(address.value, expected_address)
 

@@ -80,7 +80,7 @@ class Curve(object):
         return q
 
     def pub_key(self, pk):
-        return PublicKey(self.multiply(self.G, pk.value()))
+        return PublicKey(self.multiply(self.G, pk.value()), pk.compression)
 
     def int2octets(self, num):
         rlen = math.ceil(self.qlen / 8)
@@ -101,7 +101,7 @@ class Curve(object):
     def generate_r(self, pk, message):
         # step a
         x = self.int2octets(pk.value())
-        h1 = self.bits2octets(hashlib.sha256(message).digest())
+        h1 = self.bits2octets(message)
         vlen = 32
         # step b
         v = b'\x01' * vlen
@@ -137,8 +137,7 @@ class Curve(object):
         k = self.generate_r(private_key, payload)
         p = self.pub_key(k)
         r = p.point.X
-        h = hashlib.sha256(payload).digest()
-        hm = int.from_bytes(h, 'big') % self.n
+        hm = int.from_bytes(payload, 'big') % self.n
         s = self.inv_mod_n(k.value()) * (hm + private_key.value() * r) % self.n
         if s > self.n / 2:
             s = -1 * s % self.n

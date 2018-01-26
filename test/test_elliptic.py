@@ -58,7 +58,7 @@ class TestCurve(unittest.TestCase):
         x = 0x09A4D6792295A7F730FC3F2B49CBC0F62E862272F
         q = 0x4000000000000000000020108A2E0CC0D99F8A5EF
         c = Curve(q)
-        msg = "sample".encode()
+        msg = hashlib.sha256("sample".encode()).digest()
 
         res = c.generate_r(PrivateKey(x), msg)
 
@@ -101,7 +101,7 @@ class TestCurve(unittest.TestCase):
 
         for item in test_vectors:
             pk = item[0]
-            message = item[1].encode()
+            message = hashlib.sha256(item[1].encode()).digest()
             expected_k = item[2]
             expected_signature = item[3]
 
@@ -167,10 +167,10 @@ class TestCurve(unittest.TestCase):
 
         for item in test_vectors:
             pk = item[0]
-            message = item[1]
+            message = hashlib.sha256(item[1].encode()).digest()
             expected_der = item[2]
 
-            signature = c.sign(message.encode(), PrivateKey(pk))
+            signature = c.sign(message, PrivateKey(pk))
 
             self.assertEqual(expected_der, signature.hex(), message)
 
