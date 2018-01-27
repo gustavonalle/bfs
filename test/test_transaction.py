@@ -16,15 +16,15 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(to_varint(998000).hex(), 'fe703a0f00')
 
     def test_tx_output_p2pkh(self):
-        prev_tx = 0xab68025513c3dbd2f7b92a94e0581f5d50f654e7
-        vout = TransactionOutput(1500000, prev_tx, SpendType.P2PKH)
+        address = "1GdK9UzpHBzqzX2A9JFP3Di4weBwqgmoQA"
+        vout = TransactionOutput(1500000, address, SpendType.P2PKH)
 
         expect = 0x60e31600000000001976a914ab68025513c3dbd2f7b92a94e0581f5d50f654e788ac
         self.assertEqual(expect, self.to_int(vout.serialize()))
 
     def test_tx_output_p2wpkh(self):
-        prev_tx = 0xab68025513c3dbd2f7b92a94e0581f5d50f654e7
-        vout = TransactionOutput(1500000, prev_tx, SpendType.P2WPKH)
+        address = "1GdK9UzpHBzqzX2A9JFP3Di4weBwqgmoQA"
+        vout = TransactionOutput(1500000, address, SpendType.P2WPKH)
 
         expect = 0x60e3160000000000160014ab68025513c3dbd2f7b92a94e0581f5d50f654e7
         self.assertEqual(expect, self.to_int(vout.serialize()))
@@ -36,7 +36,7 @@ class TestTransaction(unittest.TestCase):
         prev_idx = 0
 
         # Outputs
-        hash160_output = 0xa1f856634fdac51ede71a2a13585735568470785
+        address = "1FmRHg4PQTiBAdnNmXneJRs1SCPR17uWW4"
         amount = 71943072
 
         expected = ("01000000011d24386a17877e7250f59812868c5352caac8731b0b92a8a7dffc5a"
@@ -45,7 +45,7 @@ class TestTransaction(unittest.TestCase):
                     "573556847078588ac00000000")
 
         tx_in = TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH)
-        tx_out = TransactionOutput(amount, hash160_output, SpendType.P2PKH)
+        tx_out = TransactionOutput(amount, address, SpendType.P2PKH)
 
         tx = Transaction()
         tx.add_inputs(tx_in)
@@ -62,7 +62,8 @@ class TestTransaction(unittest.TestCase):
         prev_idx = 8
 
         # Outputs
-        hash160_output = 0xa1f856634fdac51ede71a2a13585735568470785
+        address = "1FmRHg4PQTiBAdnNmXneJRs1SCPR17uWW4"
+
         amount = 591117
 
         expected = ("0100000001d424df07ba58a007ed77c25171976426d485d16186d23c44740e21"
@@ -71,7 +72,7 @@ class TestTransaction(unittest.TestCase):
                     "358573556847078588ac00000000")
 
         tx_in = TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH)
-        tx_out = TransactionOutput(amount, hash160_output, SpendType.P2PKH)
+        tx_out = TransactionOutput(amount, address, SpendType.P2PKH)
 
         tx = Transaction()
         tx.add_inputs(tx_in)
@@ -95,7 +96,6 @@ class TestTransaction(unittest.TestCase):
 
         # Outputs
         address = "16Fg2yjwrbtC6fZp61EV9mNVKmwCzGasw5"
-        hash160 = int.from_bytes(hash160_from_address(address), 'big')
         amount = (value_1 + value_2) - 1
 
         expected = ("0100000002464f86d8cbbd6181a03594b67bea56c149b5b08bfc20721a0ddb927086"
@@ -107,7 +107,7 @@ class TestTransaction(unittest.TestCase):
 
         tx_in_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_address_1, SpendType.P2PKH)
         tx_in_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_address_2, SpendType.P2PKH)
-        tx_out = TransactionOutput(amount, hash160, SpendType.P2PKH)
+        tx_out = TransactionOutput(amount, address, SpendType.P2PKH)
 
         tx = Transaction()
         tx.add_inputs(tx_in_1, tx_in_2)
@@ -127,12 +127,11 @@ class TestTransaction(unittest.TestCase):
         prev_idx = 0
 
         address = "1FromKBPAS8MWsk1Yv1Yiu8rJbjfVioBHc"
-        hash160 = int.from_bytes(hash160_from_address(address), 'big')
         amount = 118307
 
         tx = Transaction()
         tx.add_inputs(TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH))
-        tx.add_outputs(TransactionOutput(amount, hash160, SpendType.P2PKH))
+        tx.add_outputs(TransactionOutput(amount, address, SpendType.P2PKH))
 
         signed = tx.sign(priv_k, pub_k)
 
@@ -143,6 +142,27 @@ class TestTransaction(unittest.TestCase):
                     "a914a2fd2e039a86dbcf0e1a664729e09e8007f8951088ac00000000")
 
         self.assertEqual(expected, signed.serialize().hex())
+
+    def test_sign_2(self):
+        # multiple inputs and multiple outputs, one p2pkh other p2sh
+        prev_tx_1 = "5e2e877f7768a2a85018509776013242bc829a599c67a702f0a01b8815626a43"
+        prev_idx_1 = 193
+        prev_addr_1 = "15BRZw6jmoJesHBb9npiseHFawkkTQPin4"
+        unspent_1 = 0.00110610
+        input_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_addr_1, SpendType.P2PKH)
+
+        prev_tx_2 = "4104e6d8de6518d30014c90ddb2af8912c36dfef928e8cae22df092c3e93d0b7"
+        prev_idx_2 = 1
+        prev_addr_2 = "1MZnPNbhtmRjzAHqEikQYB7ENaRd5ky4aT"
+        unspent_2 = 0.16180000
+        input_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_addr_2, SpendType.P2PKH)
+
+        output1 = TransactionOutput(0.00776443 * 1e8, "13UGKrszWSkJ1328g2ugy4xvTHjHTaf5ye", SpendType.P2PKH)
+        output2 = TransactionOutput(0.15290595 * 1e8, "3QhnzCp56gUaaAw9VfVbstXm9JZoZVrEzP", SpendType.P2SH)
+
+        tx = Transaction()
+        tx.add_inputs(input_1, input_2)
+        tx.add_outputs(output1, output2)
 
     @staticmethod
     def to_int(b):

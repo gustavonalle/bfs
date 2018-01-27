@@ -7,7 +7,8 @@ from lib.elliptic import Curve
 
 class SpendType(Enum):
     P2PKH = 0
-    P2WPKH = 1
+    P2SH = 1
+    P2WPKH = 2
 
 
 class TransactionInput(object):
@@ -45,18 +46,18 @@ class Script(object):
 
 class TransactionOutput(object):
 
-    def __init__(self, satoshis, hash160, spend_type):
+    def __init__(self, satoshis, address, spend_type):
         self.satoshis = satoshis
-        self.hash160 = hash160
+        self.address = address
+        self.hash160 = hash160_from_address(address)
         self.spendType = spend_type
         self.index = 0
         self.tx = None
 
     def lock_script(self):
-        hash_bytes = self.hash160.to_bytes(20, 'big')
-        payload = to_bytes_with_size(hash_bytes)
+        payload = to_bytes_with_size(self.hash160)
         if self.spendType == SpendType.P2PKH:
-            return Script.OP_DUP + Script.OP_HASH160 + payload + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
+            return Script.create_script_pub_key(self.hash160)
         if self.spendType == SpendType.P2WPKH:
             return Script.OP_0 + payload
 

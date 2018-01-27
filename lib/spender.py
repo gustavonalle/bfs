@@ -1,5 +1,5 @@
-from lib.commons import btc_to_satoshis, to_bytes_with_size, hash160_from_address
-from lib.transaction import Transaction, TransactionInput, TransactionOutput, Script, SpendType
+from lib.commons import btc_to_satoshis
+from lib.transaction import Transaction, TransactionInput, TransactionOutput, SpendType
 
 
 class Utxo(object):
@@ -54,8 +54,7 @@ class Spender(object):
             tx.add_inputs(tx_input)
 
         for destination in self.destinations:
-            hash160_output = int.from_bytes(hash160_from_address(destination.address), 'big')
-            tx_output = TransactionOutput(btc_to_satoshis(destination.amount_btc), hash160_output, SpendType.P2PKH)
+            tx_output = TransactionOutput(btc_to_satoshis(destination.amount_btc), destination.address, SpendType.P2PKH)
             tx.add_outputs(tx_output)
 
         public_key = private_key.create_pub_key()
