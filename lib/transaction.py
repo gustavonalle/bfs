@@ -12,21 +12,22 @@ class SpendType(Enum):
 
 class TransactionInput(object):
 
-    def __init__(self, prev_tx_hash, index, prev_script, spend_type):
+    def __init__(self, prev_tx_hash, index, address, spend_type):
         self.prevTxHash = prev_tx_hash
         self.index = index
-        self.prev_script = prev_script
+        self.address = address
         self.spendType = spend_type
+        if self.spendType == SpendType.P2PKH:
+            self.prev_script = Script.create_script_pub_key(hash160_from_address(self.address))
+        else:
+            raise RuntimeError("spend type not supported:" + self.spendType)
 
     def serialize(self):
         payload = binascii.unhexlify(self.prevTxHash)[::-1]
         payload += self.index.to_bytes(4, 'little')
-        payload += to_bytes_with_size(self.unlock_script())
+        payload += to_bytes_with_size(self.prev_script)
         payload += b'\xFF\xFF\xFF\xFF'
         return payload
-
-    def unlock_script(self):
-        return binascii.unhexlify(self.prev_script)
 
 
 class Script(object):
@@ -35,6 +36,11 @@ class Script(object):
     OP_DUP = b'\x76'
     OP_EQUALVERIFY = b'\x88'
     OP_HASH160 = b'\xa9'
+
+    @staticmethod
+    def create_script_pub_key(hash160):
+        hash_with_size = to_bytes_with_size(hash160)
+        return Script.OP_DUP + Script.OP_HASH160 + hash_with_size + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
 
 
 class TransactionOutput(object):
@@ -100,7 +106,7 @@ class Transaction(object):
             der_sig = der(signature) + b'\x01'
             script_sig = to_bytes_with_size(der_sig) + to_bytes_with_size(public_key.get_value())
             signed_input = copy.deepcopy(tx_input)
-            signed_input.prev_script = script_sig.hex()
+            signed_input.prev_script = script_sig
             signed_tx.replace_input(i, signed_input)
         return signed_tx
 

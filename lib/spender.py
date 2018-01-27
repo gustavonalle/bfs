@@ -50,9 +50,7 @@ class Spender(object):
         tx = Transaction()
 
         for utxo in self.utxos:
-            prev_script = Script.OP_DUP + Script.OP_HASH160 + to_bytes_with_size(
-                hash160_from_address(utxo.address)) + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
-            tx_input = TransactionInput(utxo.tx_hash, utxo.index, prev_script.hex(), SpendType.P2PKH)
+            tx_input = TransactionInput(utxo.tx_hash, utxo.index, utxo.address, SpendType.P2PKH)
             tx.add_inputs(tx_input)
 
         for destination in self.destinations:

@@ -32,7 +32,7 @@ class TestTransaction(unittest.TestCase):
     def test_P2PKH_RawTx_SingleInput_SingleOutput(self):
         # Inputs
         prev_tx = "d53b66eea5c5ff7d8a2ab9b03187acca52538c861298f550727e87176a38241d"
-        prev_script = "76a914f13bdea27f1fdfb164d083dd827ff55eb140d68688ac"
+        prev_address = "1NzXa3pE19AkomZHHUaxbV7LGxK8nMJpEa"
         prev_idx = 0
 
         # Outputs
@@ -44,7 +44,7 @@ class TestTransaction(unittest.TestCase):
                     "88acffffffff01a0c34904000000001976a914a1f856634fdac51ede71a2a1358"
                     "573556847078588ac00000000")
 
-        tx_in = TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH)
+        tx_in = TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH)
         tx_out = TransactionOutput(amount, hash160_output, SpendType.P2PKH)
 
         tx = Transaction()
@@ -58,7 +58,7 @@ class TestTransaction(unittest.TestCase):
     def test_P2PKH_RawTx_SingleInput_SingleOutput_2(self):
         # Inputs
         prev_tx = "e220edf4ac210e74443cd28661d185d42664977151c277ed07a058ba07df24d4"
-        prev_script = "76a9143f16f9b73c09a678997c6e479efae2c0df6feb9e88ac"
+        prev_address = "16kb6Sy8eDeUpkiSr2DzjvZbtZ1kQtiCTK"
         prev_idx = 8
 
         # Outputs
@@ -70,7 +70,7 @@ class TestTransaction(unittest.TestCase):
                     "9e88acffffffff010d050900000000001976a914a1f856634fdac51ede71a2a1"
                     "358573556847078588ac00000000")
 
-        tx_in = TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH)
+        tx_in = TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH)
         tx_out = TransactionOutput(amount, hash160_output, SpendType.P2PKH)
 
         tx = Transaction()
@@ -85,12 +85,12 @@ class TestTransaction(unittest.TestCase):
         # Inputs
         prev_tx_1 = "8ab885867092db0d1a7220fc8bb0b549c156ea7bb69435a08161bdcbd8864f46"
         prev_idx_1 = 2
-        prev_script_1 = "76a914e58b5ca8dedf22a4e86ebfa3a6ac0a595abf887688ac"
+        prev_address_1 = "1Mvigy76bN9y55YisBY6YxkrTGkYWoDe3Y"
         value_1 = 91520573
 
         prev_tx_2 = "8d097c739096828989427f1a00910996fd14c6c2d322fd559e9b68ef43d25024"
         prev_idx_2 = 0
-        prev_script_2 = "76a9146ae01d93e035b5724748b427d9d565c18a44885a88ac"
+        prev_address_2 = "1Ak779xz5e2x5MM9mGRsPc3XLFjCUAEH3p"
         value_2 = 416110
 
         # Outputs
@@ -105,8 +105,8 @@ class TestTransaction(unittest.TestCase):
                     "ff01aad77a05000000001976a914399f09529a1e7f37ff5a892644b47690ab5e516f"
                     "88ac00000000")
 
-        tx_in_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_script_1, SpendType.P2PKH)
-        tx_in_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_script_2, SpendType.P2PKH)
+        tx_in_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_address_1, SpendType.P2PKH)
+        tx_in_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_address_2, SpendType.P2PKH)
         tx_out = TransactionOutput(amount, hash160, SpendType.P2PKH)
 
         tx = Transaction()
@@ -123,7 +123,7 @@ class TestTransaction(unittest.TestCase):
         pub_k = priv_k.create_pub_key()
 
         prev_tx = "96534da2f213367a6d589f18d7d6d1689748cd911f8c33a9aee754a80de166be"
-        prev_script = "76a914dd6cce9f255a8cc17bda8ba0373df8e861cb866e88ac"
+        prev_address = "1MBngSqZbMydscpzSoehjP8kznMaHAzh9y"
         prev_idx = 0
 
         address = "1FromKBPAS8MWsk1Yv1Yiu8rJbjfVioBHc"
@@ -131,7 +131,7 @@ class TestTransaction(unittest.TestCase):
         amount = 118307
 
         tx = Transaction()
-        tx.add_inputs(TransactionInput(prev_tx, prev_idx, prev_script, SpendType.P2PKH))
+        tx.add_inputs(TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH))
         tx.add_outputs(TransactionOutput(amount, hash160, SpendType.P2PKH))
 
         signed = tx.sign(priv_k, pub_k)
