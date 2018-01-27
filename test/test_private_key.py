@@ -3,7 +3,6 @@ from unittest import TestCase
 
 from lib.address import AddressV1
 from lib.commons import Network
-from lib.elliptic import Curve
 from lib.keys import PrivateKey
 
 
@@ -15,7 +14,7 @@ class TestPrivateKey(TestCase):
             wif = pk.to_wif(Network.MAIN_NET)
             from_wif = PrivateKey.from_wif(wif)
 
-            self.assertEqual(pk.value(), from_wif.value())
+            self.assertEqual(pk.key, from_wif.key)
 
     def test_to_from_address(self):
         # Expected address, pub key, private key (WIF)
@@ -77,7 +76,7 @@ class TestPrivateKey(TestCase):
             priv_key = PrivateKey.from_wif(private_key_wif)
             self.assertEqual(private_key_wif, priv_key.to_wif(Network.MAIN_NET))
 
-            pub_key = Curve().pub_key(priv_key)
+            pub_key = priv_key.create_pub_key()
 
             self.assertEqual(pub_key.get_value().hex(), public_key_hex)
 

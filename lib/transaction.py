@@ -61,6 +61,7 @@ class TransactionOutput(object):
 
 
 class Transaction(object):
+    elliptic = Curve()
 
     def __init__(self, version=1):
         self.version = version
@@ -95,9 +96,9 @@ class Transaction(object):
         for i, tx_input in enumerate(self.inputs):
             raw = self.serialize(with_hash_code=True)
             dhash = double_sha256(raw)
-            signature = Curve().sign(dhash, private_key)
-            signature = signature + b'\x01'
-            script_sig = to_bytes_with_size(signature) + to_bytes_with_size(public_key.get_value())
+            signature = self.elliptic.ecdsa(private_key.key, public_key.point, dhash)
+            der_sig = der(signature) + b'\x01'
+            script_sig = to_bytes_with_size(der_sig) + to_bytes_with_size(public_key.get_value())
             signed_input = copy.deepcopy(tx_input)
             signed_input.prev_script = script_sig.hex()
             signed_tx.replace_input(i, signed_input)

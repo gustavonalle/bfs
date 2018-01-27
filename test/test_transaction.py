@@ -120,7 +120,7 @@ class TestTransaction(unittest.TestCase):
     def test_sign_1(self):
         # Sign simple 1 input tx
         priv_k = PrivateKey(0x0ecd20654c2e2be708495853e8da35c664247040c00bd10b9b13e5e86e6a808d)
-        pub_k = Curve().pub_key(priv_k)
+        pub_k = priv_k.create_pub_key()
 
         prev_tx = "96534da2f213367a6d589f18d7d6d1689748cd911f8c33a9aee754a80de166be"
         prev_script = "76a914dd6cce9f255a8cc17bda8ba0373df8e861cb866e88ac"

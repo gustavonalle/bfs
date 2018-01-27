@@ -1,5 +1,4 @@
 from lib.commons import btc_to_satoshis, to_bytes_with_size, hash160_from_address
-from lib.elliptic import Curve
 from lib.transaction import Transaction, TransactionInput, TransactionOutput, Script, SpendType
 
 
@@ -61,7 +60,6 @@ class Spender(object):
             tx_output = TransactionOutput(btc_to_satoshis(destination.amount_btc), hash160_output, SpendType.P2PKH)
             tx.add_outputs(tx_output)
 
-        print(tx.serialize(True).hex())
-        public_key = Curve().pub_key(private_key)
+        public_key = private_key.create_pub_key()
         signed = tx.sign(private_key, public_key)
         return signed.serialize()

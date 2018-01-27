@@ -21,4 +21,4 @@ class AddressV1(object):
         return to_wif(self.hash160, network, compressed)
 
     def __str__(self):
-        return f"Address({self.network}): {self.value}"
+        return self.value

@@ -2,9 +2,6 @@ import hashlib
 import hmac
 import math
 
-from lib.commons import der
-from lib.keys import PublicKey, PrivateKey
-
 
 class Point(object):
 
@@ -79,8 +76,8 @@ class Curve(object):
             d >>= 1
         return q
 
-    def pub_key(self, pk):
-        return PublicKey(self.multiply(self.G, pk.value()), pk.compression)
+    def multiply_g(self, pk):
+        return self.multiply(self.G, pk)
 
     def int2octets(self, num):
         rlen = math.ceil(self.qlen / 8)
@@ -98,9 +95,9 @@ class Curve(object):
         z2 = z1 % self.p
         return self.int2octets(z2)
 
-    def generate_r(self, pk, message):
+    def generate_r(self, pk_value, message):
         # step a
-        x = self.int2octets(pk.value())
+        x = self.int2octets(pk_value)
         h1 = self.bits2octets(message)
         vlen = 32
         # step b
@@ -129,20 +126,16 @@ class Curve(object):
                 t += v
             kc = self.bits2int(t)
             if 0 < kc < self.p:
-                return PrivateKey(kc)
+                return kc
             k = hmac.new(k, v + b'\x00', digestmod=hashlib.sha256).digest()
             v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
 
-    def ecdsa(self, private_key, payload):
-        k = self.generate_r(private_key, payload)
-        p = self.pub_key(k)
-        r = p.point.X
+    def ecdsa(self, private_key_value, pub_key_point, payload):
+        k = self.generate_r(private_key_value, payload)
+        p = self.multiply_g(k)
+        r = p.X
         hm = int.from_bytes(payload, 'big') % self.n
-        s = self.inv_mod_n(k.value()) * (hm + private_key.value() * r) % self.n
+        s = self.inv_mod_n(k) * (hm + private_key_value * r) % self.n
         if s > self.n / 2:
             s = -1 * s % self.n
         return r, s
-
-    def sign(self, message, private_key):
-        ecdsa = self.ecdsa(private_key, message)
-        return der(ecdsa)

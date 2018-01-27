@@ -2,11 +2,14 @@ import hashlib
 import secrets
 
 from lib import commons
+from lib.address import AddressV1
+from lib.elliptic import Curve
 
 
 class PrivateKey(object):
     MAX_PRIVATE_KEY_VALUE = 1.158 * 10 ** 77
     NBITS = 256
+    elliptic = Curve()
 
     def __init__(self, value=None, compression=True):
         self.compression = compression
@@ -36,8 +39,9 @@ class PrivateKey(object):
         else:
             return self.generate_random(nbits)
 
-    def value(self):
-        return self.key
+    def create_pub_key(self):
+        p = self.elliptic.multiply(self.elliptic.G, self.key)
+        return PublicKey(p, self.compression)
 
     def to_wif(self, network):
         return commons.to_wif(self.key.to_bytes(32, 'big'), network, self.compression)
@@ -65,5 +69,8 @@ class PublicKey(object):
         hash160 = hashlib.new('ripemd160', digest).digest()
         return hash160
 
+    def get_address_v1(self, network):
+        return AddressV1(self.hash160(), network)
+
     def __str__(self):
-        return f"Public Key: ({hex(self.point.X)}, {hex(self.point.Y)})"
+        return f"({hex(self.point.X)}, {hex(self.point.Y)})"
