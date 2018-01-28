@@ -1,8 +1,7 @@
 import hashlib
 import itertools
-from enum import Enum
-
 import math
+from enum import Enum
 
 BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 

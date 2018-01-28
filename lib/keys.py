@@ -2,7 +2,7 @@ import hashlib
 import secrets
 
 from lib import commons
-from lib.address import AddressV1
+from lib.address import AddressV1, Bech32Address
 from lib.elliptic import Curve
 
 
@@ -71,6 +71,9 @@ class PublicKey(object):
 
     def get_address_v1(self, network):
         return AddressV1(self.hash160(), network)
+
+    def get_segwit_address(self, network):
+        return Bech32Address(self.hash160(), network)
 
     def __str__(self):
         return f"({hex(self.point.X)}, {hex(self.point.Y)})"

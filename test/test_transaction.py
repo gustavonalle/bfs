@@ -117,6 +117,37 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(expected, raw.hex())
 
+    def test_MultipleInput_MultipleOutpute(self):
+        # https://api.blockcypher.com/v1/btc/main/txs/b4c2edbe77af5ef1f69f91256fc84d0902037ead0bbe8f600b6c4d170afecfec?limit=50&includeHex=true
+        # multiple inputs and multiple outputs, one p2pkh other p2sh
+        prev_tx_1 = "5e2e877f7768a2a85018509776013242bc829a599c67a702f0a01b8815626a43"
+        prev_idx_1 = 193
+        prev_addr_1 = "15BRZw6jmoJesHBb9npiseHFawkkTQPin4"
+        input_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_addr_1, SpendType.P2PKH)
+
+        prev_tx_2 = "4104e6d8de6518d30014c90ddb2af8912c36dfef928e8cae22df092c3e93d0b7"
+        prev_idx_2 = 1
+        prev_addr_2 = "1MZnPNbhtmRjzAHqEikQYB7ENaRd5ky4aT"
+        input_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_addr_2, SpendType.P2PKH)
+
+        output1 = TransactionOutput(776443, "13UGKrszWSkJ1328g2ugy4xvTHjHTaf5ye", SpendType.P2PKH)
+        output2 = TransactionOutput(15290595, "3QhnzCp56gUaaAw9VfVbstXm9JZoZVrEzP", SpendType.P2SH)
+
+        tx = Transaction()
+        tx.add_inputs(input_1, input_2)
+        tx.add_outputs(output1, output2)
+
+        expected_raw = ("0100000002436a6215881ba0f002a7679c599a82bc4232017697501850a8a268777f872e5ec1000000"
+                        "1976a9142dd92bc1b62507a6e23bc685d4e3723486ce591388acffffffffb7d0933e2c09df22ae8c8e"
+                        "92efdf362c91f82adb0dc91400d31865ded8e60441010000001976a914e195b669de8e49f955749033"
+                        "fa2d79390732c43588acffffffff02fbd80b00000000001976a9141b18467d085f8aa44493a2d5f3cb"
+                        "771ab5ae412588ace350e9000000000017a914fc708283a974bacd4b1bdbf1ac25a121baa291398700"
+                        "000000")
+
+        raw_tx = tx.serialize().hex()
+
+        self.assertEqual(expected_raw, raw_tx)
+
     def test_sign_1(self):
         # Sign simple 1 input tx
         priv_k = PrivateKey(0x0ecd20654c2e2be708495853e8da35c664247040c00bd10b9b13e5e86e6a808d)
@@ -142,27 +173,6 @@ class TestTransaction(unittest.TestCase):
                     "a914a2fd2e039a86dbcf0e1a664729e09e8007f8951088ac00000000")
 
         self.assertEqual(expected, signed.serialize().hex())
-
-    def test_sign_2(self):
-        # multiple inputs and multiple outputs, one p2pkh other p2sh
-        prev_tx_1 = "5e2e877f7768a2a85018509776013242bc829a599c67a702f0a01b8815626a43"
-        prev_idx_1 = 193
-        prev_addr_1 = "15BRZw6jmoJesHBb9npiseHFawkkTQPin4"
-        unspent_1 = 0.00110610
-        input_1 = TransactionInput(prev_tx_1, prev_idx_1, prev_addr_1, SpendType.P2PKH)
-
-        prev_tx_2 = "4104e6d8de6518d30014c90ddb2af8912c36dfef928e8cae22df092c3e93d0b7"
-        prev_idx_2 = 1
-        prev_addr_2 = "1MZnPNbhtmRjzAHqEikQYB7ENaRd5ky4aT"
-        unspent_2 = 0.16180000
-        input_2 = TransactionInput(prev_tx_2, prev_idx_2, prev_addr_2, SpendType.P2PKH)
-
-        output1 = TransactionOutput(0.00776443 * 1e8, "13UGKrszWSkJ1328g2ugy4xvTHjHTaf5ye", SpendType.P2PKH)
-        output2 = TransactionOutput(0.15290595 * 1e8, "3QhnzCp56gUaaAw9VfVbstXm9JZoZVrEzP", SpendType.P2SH)
-
-        tx = Transaction()
-        tx.add_inputs(input_1, input_2)
-        tx.add_outputs(output1, output2)
 
     @staticmethod
     def to_int(b):

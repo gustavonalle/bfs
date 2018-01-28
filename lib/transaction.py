@@ -19,7 +19,8 @@ class TransactionInput(object):
         self.address = address
         self.spendType = spend_type
         if self.spendType == SpendType.P2PKH:
-            self.prev_script = Script.create_script_pub_key(hash160_from_address(self.address))
+            hash160 = hash160_from_address(self.address)
+            self.prev_script = Script.create_script_pub_key(hash160, self.spendType)
         else:
             raise RuntimeError("spend type not supported:" + self.spendType)
 
@@ -35,13 +36,20 @@ class Script(object):
     OP_0 = b'\x00'
     OP_CHECKSIG = b'\xac'
     OP_DUP = b'\x76'
+    OP_EQUAL = b'\x87'
     OP_EQUALVERIFY = b'\x88'
     OP_HASH160 = b'\xa9'
 
     @staticmethod
-    def create_script_pub_key(hash160):
+    def create_script_pub_key(hash160, spend_type):
         hash_with_size = to_bytes_with_size(hash160)
-        return Script.OP_DUP + Script.OP_HASH160 + hash_with_size + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
+        if spend_type == SpendType.P2PKH:
+            return Script.OP_DUP + Script.OP_HASH160 + hash_with_size + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
+        if spend_type == SpendType.P2SH:
+            return Script.OP_HASH160 + hash_with_size + Script.OP_EQUAL
+        if spend_type == SpendType.P2WPKH:
+            return Script.OP_0 + hash_with_size
+        raise RuntimeError("Invalid spend type " + spend_type)
 
 
 class TransactionOutput(object):
@@ -55,11 +63,7 @@ class TransactionOutput(object):
         self.tx = None
 
     def lock_script(self):
-        payload = to_bytes_with_size(self.hash160)
-        if self.spendType == SpendType.P2PKH:
-            return Script.create_script_pub_key(self.hash160)
-        if self.spendType == SpendType.P2WPKH:
-            return Script.OP_0 + payload
+        return Script.create_script_pub_key(self.hash160, self.spendType)
 
     def serialize(self):
         amount = self.satoshis.to_bytes(8, 'little')
@@ -101,7 +105,9 @@ class Transaction(object):
     def sign(self, private_key, public_key):
         signed_tx = copy.deepcopy(self)
         for i, tx_input in enumerate(self.inputs):
-            raw = self.serialize(with_hash_code=True)
+            template = copy.deepcopy(self)
+            template.erase_input_scripts(i)
+            raw = template.serialize(with_hash_code=True)
             dhash = double_sha256(raw)
             signature = self.elliptic.ecdsa(private_key.key, public_key.point, dhash)
             der_sig = der(signature) + b'\x01'
@@ -113,3 +119,8 @@ class Transaction(object):
 
     def replace_input(self, i, signed_input):
         self.inputs[i] = signed_input
+
+    def erase_input_scripts(self, except_id):
+        for i, tx_input in enumerate(self.inputs):
+            if i != except_id:
+                tx_input.prev_script = None

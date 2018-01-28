@@ -24,6 +24,22 @@ class TestAddress(unittest.TestCase):
             self.assertEqual(address_str, address.value)
             self.assertEqual(hash160_bytes, hash160_from_address(address.value))
 
+    def test_bech32(self):
+        vector = [
+            ("tb1qrlx6pqm5lrzg2jus7kxx3u7cypftcruqk42lcf",
+             0x1fcda08374f8c4854b90f58c68f3d82052bc0f80,
+             Network.TEST_NET),
+            ("bc1ql2yexu5unurt8ullfjt6nx4fnz8gtfgcuydejn",
+             0xfa8993729c9f06b3f3ff4c97a99aa9988e85a518,
+             Network.MAIN_NET),
+            ("bc1qc235rpvagps8p7249tq554lnfctm27sjlzzrut",
+             0xc2a341859d406070f9552ac14a57f34e17b57a12,
+             Network.MAIN_NET)
+        ]
 
-if __name__ == '__main__':
-    unittest.main()
+        for item in vector:
+            expected = item[0]
+            hash160 = item[1].to_bytes(20, 'big')
+            net = item[2]
+            result = Bech32Address(hash160, net)
+            self.assertEqual(expected, result.value)
