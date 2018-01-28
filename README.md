@@ -8,7 +8,7 @@ Currently supported:
 
 * Generate private key
 * Generate pub key - elliptic curve
-* Create V1 addresses for Test net and Main net
+* Create V1 and bech32 addresses for Testnet and Mainnet
 * Sign P2PKH transactions with multiple inputs and outputs
 * RFC-6979 for deterministic ECDSA signature
 
