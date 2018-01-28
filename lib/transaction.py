@@ -5,12 +5,6 @@ from lib.commons import *
 from lib.elliptic import Curve
 
 
-class SpendType(Enum):
-    P2PKH = 0
-    P2SH = 1
-    P2WPKH = 2
-
-
 class TransactionInput(object):
 
     def __init__(self, prev_tx_hash, index, address, spend_type):
@@ -19,7 +13,7 @@ class TransactionInput(object):
         self.address = address
         self.spendType = spend_type
         if self.spendType == SpendType.P2PKH:
-            hash160 = hash160_from_address(self.address)
+            hash160 = hash160_from_address(self.address, spend_type)
             self.prev_script = Script.create_script_pub_key(hash160, self.spendType)
         else:
             raise RuntimeError("spend type not supported:" + self.spendType)
@@ -57,8 +51,8 @@ class TransactionOutput(object):
     def __init__(self, satoshis, address, spend_type):
         self.satoshis = satoshis
         self.address = address
-        self.hash160 = hash160_from_address(address)
         self.spendType = spend_type
+        self.hash160 = hash160_from_address(address, spend_type)
         self.index = 0
         self.tx = None
 

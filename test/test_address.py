@@ -2,6 +2,7 @@ import unittest
 
 from lib.address import *
 from lib.commons import hash160_from_address
+from lib.transaction import SpendType
 
 
 class TestAddress(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestAddress(unittest.TestCase):
 
             address = AddressV1(hash160_bytes, net)
             self.assertEqual(address_str, address.value)
-            self.assertEqual(hash160_bytes, hash160_from_address(address.value))
+            self.assertEqual(hash160_bytes, hash160_from_address(address.value, SpendType.P2PKH))
 
     def test_bech32(self):
         vector = [
@@ -38,8 +39,14 @@ class TestAddress(unittest.TestCase):
         ]
 
         for item in vector:
-            expected = item[0]
+            address = item[0]
             hash160 = item[1].to_bytes(20, 'big')
             net = item[2]
-            result = Bech32Address(hash160, net)
-            self.assertEqual(expected, result.value)
+
+            # Hash160 -> Bech32
+            result = Bech32Address.from_hash160(hash160, net)
+            self.assertEqual(address, result.value)
+
+            # bech32 -> Hash160
+            decoded_hash_160 = Bech32Address.from_address(address).hash160
+            self.assertEqual(decoded_hash_160, hash160)

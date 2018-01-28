@@ -23,10 +23,10 @@ class TestTransaction(unittest.TestCase):
         self.assertEqual(expect, self.to_int(vout.serialize()))
 
     def test_tx_output_p2wpkh(self):
-        address = "1GdK9UzpHBzqzX2A9JFP3Di4weBwqgmoQA"
+        address = "tb1qfeytr2u0d3e3tny5kyjvjule3srx33eclcx6sy"
         vout = TransactionOutput(1500000, address, SpendType.P2WPKH)
 
-        expect = 0x60e3160000000000160014ab68025513c3dbd2f7b92a94e0581f5d50f654e7
+        expect = 0x60e31600000000001600144e48b1ab8f6c7315cc94b124c973f98c0668c738
         self.assertEqual(expect, self.to_int(vout.serialize()))
 
     def test_P2PKH_RawTx_SingleInput_SingleOutput(self):
@@ -204,10 +204,39 @@ class TestTransaction(unittest.TestCase):
 
         signed = tx.sign(priv_k, priv_k.create_pub_key())
 
-        print(signed.serialize().hex())
-
         serialize__hex = signed.serialize().hex()
         self.assertEqual(expected, serialize__hex)
+
+    def test_sign_3(self):
+        # Test spending a P2PKH input to a P2WPKH
+        priv_k = PrivateKey(0x95fa16fb03e27b77166b6a0e03493eda7ad06a64a273f8ddb82238141a1b59dd)
+
+        input = TransactionInput("53ca9780e8c7a0022e2146477433eac26be5b27ef2b0ba969f6431b92a2b4108", 0,
+                                 "mvHNaj9NDV9RwkFzV6m28M5LJBz7r5vNwQ",
+                                 SpendType.P2PKH)
+
+        output = TransactionOutput(201921172, "tb1qfeytr2u0d3e3tny5kyjvjule3srx33eclcx6sy", SpendType.P2WPKH)
+
+        tx = Transaction(version=2)
+        tx.add_inputs(input)
+        tx.add_outputs(output)
+
+        expected_raw = ("020000000108412b2ab931649f96bab0f27eb2e56bc2ea33744746212e02a0c7e88097ca5300000000"
+                        "1976a914a1f856634fdac51ede71a2a1358573556847078588acffffffff019412090c000000001600"
+                        "144e48b1ab8f6c7315cc94b124c973f98c0668c73800000000")
+
+        self.assertEqual(expected_raw, tx.serialize().hex())
+
+        signed = tx.sign(priv_k, priv_k.create_pub_key())
+
+        expected_signed = ("020000000108412b2ab931649f96bab0f27eb2e56bc2ea33744746212e02a0c7e88097ca530000000"
+                           "06b4830450221008154ea4ed4c96f8076e10734a3e507f8b183e784e8578c4dde648536b1d0723f02"
+                           "20158963e8d4d8ff47ff288b51ce250b561f08e08bc3f97691b00da5f3d1bf334f01210320c617efd"
+                           "2de9208533c0deecc38610fc33cd3f7dd9e9b107f3b87cd7cdc3a21ffffffff019412090c00000000"
+                           "1600144e48b1ab8f6c7315cc94b124c973f98c0668c73800000000")
+
+        serialize__hex = signed.serialize().hex()
+        self.assertEqual(expected_signed, serialize__hex)
 
     @staticmethod
     def to_int(b):

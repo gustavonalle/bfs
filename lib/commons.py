@@ -3,7 +3,15 @@ import itertools
 import math
 from enum import Enum
 
+from lib.bech32 import decode
+
 BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+
+
+class SpendType(Enum):
+    P2PKH = 0
+    P2SH = 1
+    P2WPKH = 2
 
 
 class Network(Enum):
@@ -37,10 +45,14 @@ def remove_leading_zeroes(b):
     return b
 
 
-def hash160_from_address(address):
-    h = base58_decode(address)
-    b = h.to_bytes(25, 'big')[1:-4]
-    return b
+def hash160_from_address(address, spend_type):
+    if spend_type == SpendType.P2WPKH:
+        hrp, data = decode(address[0:2], address)
+        return bytes(data)
+    else:
+        h = base58_decode(address)
+        b = h.to_bytes(25, 'big')[1:-4]
+        return b
 
 
 def base58_decode(base58):
