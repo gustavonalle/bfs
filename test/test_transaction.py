@@ -174,6 +174,41 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(expected, signed.serialize().hex())
 
+    def test_sign_2(self):
+        # Multiple P2PKH inputs and 1 P2PKH output
+        priv_k = PrivateKey(0x22861a6e8a0670f6388847e83bbea3ed580280b612c11470998baf11ed95d032, compression=False)
+
+        input1 = TransactionInput("2dac8856a21e3cd0fae25b28ef44c2ab4360fe3daa2fdc8815f89ad3b03c9486", 0,
+                                  "n3WUs6uCpAc1at2u13ZLRQKf8wuqgVdZr4",
+                                  SpendType.P2PKH)
+
+        input2 = TransactionInput("d53b66eea5c5ff7d8a2ab9b03187acca52538c861298f550727e87176a38241d", 0,
+                                  "n3WUs6uCpAc1at2u13ZLRQKf8wuqgVdZr4",
+                                  SpendType.P2PKH)
+
+        output = TransactionOutput(130000000 + 71941172, "mvHNaj9NDV9RwkFzV6m28M5LJBz7r5vNwQ", SpendType.P2PKH)
+
+        expected = ("020000000286943cb0d39af81588dc2faa3dfe6043abc244ef285be2fad03c1ea25688ac2d000000008b483045"
+                    "022100d72dd4a871d1db72d32ee3da5ad1349daa99d8b67567efcfd8c273f8b95ba3770220439542142cd966f4"
+                    "67403a583397a5643128e203863349328d4a7c6822cf670e014104dc406568adadd693f302205af9694bf3caf3"
+                    "da0374f2183bea4680fb0d1f5cf5f06c2a78a0229129023260658e4e9f37d7d9e22fad81dfdbb944163138a82b"
+                    "68ffffffff1d24386a17877e7250f59812868c5352caac8731b0b92a8a7dffc5a5ee663bd5000000008b483045"
+                    "022100923a2d1a56c90536a84575c5b459cd2e22345951f3840cb77810a88e9585a261022077595add75ffa707"
+                    "bbdedd4ab952f0fb93add38f8e979d8e3fdacaaaf4c99a73014104dc406568adadd693f302205af9694bf3caf3"
+                    "da0374f2183bea4680fb0d1f5cf5f06c2a78a0229129023260658e4e9f37d7d9e22fad81dfdbb944163138a82b"
+                    "68ffffffff01b460090c000000001976a914a1f856634fdac51ede71a2a1358573556847078588ac00000000")
+
+        tx = Transaction(version=2)
+        tx.add_inputs(input1, input2)
+        tx.add_outputs(output)
+
+        signed = tx.sign(priv_k, priv_k.create_pub_key())
+
+        print(signed.serialize().hex())
+
+        serialize__hex = signed.serialize().hex()
+        self.assertEqual(expected, serialize__hex)
+
     @staticmethod
     def to_int(b):
         return int.from_bytes(b, 'big')

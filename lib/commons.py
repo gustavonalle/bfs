@@ -23,8 +23,11 @@ def to_varint(n):
 
 
 def to_bytes_with_size(content):
-    size = len(content)
-    return to_varint(size) + content
+    if content is None:
+        return b'\x00'
+    else:
+        size = len(content)
+        return to_varint(size) + content
 
 
 def remove_leading_zeroes(b):
