@@ -9,7 +9,7 @@ Currently supported:
 * Generate private key
 * Generate pub key - elliptic curve
 * Create V1 and bech32 addresses for Testnet and Mainnet
-* Sign P2PKH transactions with multiple inputs (P2PKH) and outputs (P2PKH and P2WPKH)
+* Sign transactions with multiple inputs (P2PKH/P2PK/P2WPKH) and outputs (P2PKH/P2PK/P2WPKH)
 * RFC-6979 for deterministic ECDSA signature
 
 ## Usage examples:
