@@ -2,7 +2,6 @@ import unittest
 
 from lib.commons import der
 from lib.elliptic import *
-from lib.keys import PrivateKey
 
 
 class TestCurve(unittest.TestCase):
@@ -107,8 +106,7 @@ class TestCurve(unittest.TestCase):
             expected_signature = item[3]
 
             rfc6979_key = c.generate_r(pk, message)
-            pub_point = PrivateKey(pk).create_pub_key().point
-            ecdsa = c.ecdsa(pk, pub_point, message)
+            ecdsa = c.ecdsa(pk, message)
 
             self.assertEqual(expected_k, rfc6979_key)
             self.assertEqual(expected_signature, format(ecdsa[0], 'x') + format(ecdsa[1], 'x'))
@@ -172,8 +170,7 @@ class TestCurve(unittest.TestCase):
             message = hashlib.sha256(item[1].encode()).digest()
             expected_der = item[2]
 
-            pub_key = PrivateKey(pk).create_pub_key()
-            signature = c.ecdsa(pk, pub_key.point, message)
+            signature = c.ecdsa(pk, message)
 
             self.assertEqual(expected_der, der(signature).hex(), message)
 

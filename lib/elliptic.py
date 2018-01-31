@@ -130,7 +130,7 @@ class Curve(object):
             k = hmac.new(k, v + b'\x00', digestmod=hashlib.sha256).digest()
             v = hmac.new(k, v, digestmod=hashlib.sha256).digest()
 
-    def ecdsa(self, private_key_value, pub_key_point, payload):
+    def ecdsa(self, private_key_value, payload):
         k = self.generate_r(private_key_value, payload)
         p = self.multiply_g(k)
         r = p.X

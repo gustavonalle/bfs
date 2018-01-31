@@ -40,8 +40,15 @@ class PrivateKey(object):
             return self.generate_random(nbits)
 
     def create_pub_key(self):
-        p = self.elliptic.multiply(self.elliptic.G, self.key)
-        return PublicKey(p, self.compression)
+        point = self.elliptic.multiply(self.elliptic.G, self.key)
+        if self.compression:
+            prefix = b'\x02' if point.Y & 1 == 0 else b'\x03'
+            value = prefix + point.X.to_bytes(32, 'big')
+        else:
+            pub_key = (point.X << 256 | point.Y)
+            pub_key_bytes = pub_key.to_bytes(64, 'big')
+            value = b'\x04' + pub_key_bytes
+        return PublicKey(value)
 
     def to_wif(self, network):
         return commons.to_wif(self.key.to_bytes(32, 'big'), network, self.compression)
@@ -49,23 +56,12 @@ class PrivateKey(object):
 
 class PublicKey(object):
 
-    def __init__(self, point, compression=True):
-        self.compression = compression
-        self.point = point
-
-    def get_value(self):
-        if self.compression:
-            prefix = b'\x02' if self.point.Y & 1 == 0 else b'\x03'
-            return prefix + self.point.X.to_bytes(32, 'big')
-        else:
-            pub_key = (self.point.X << 256 | self.point.Y)
-            pub_key_bytes = pub_key.to_bytes(64, 'big')
-            return b'\x04' + pub_key_bytes
+    def __init__(self, value):
+        self.value = value
 
     # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
     def hash160(self):
-        payload = self.get_value()
-        digest = hashlib.sha256(payload).digest()
+        digest = hashlib.sha256(self.value).digest()
         hash160 = hashlib.new('ripemd160', digest).digest()
         return hash160
 
@@ -76,4 +72,11 @@ class PublicKey(object):
         return Bech32Address.from_hash160(self.hash160(), network)
 
     def __str__(self):
-        return f"({hex(self.point.X)}, {hex(self.point.Y)})"
+        return f"({hex(self.value)}"
+
+
+class KeyPair(object):
+
+    def __init__(self, priv_key, pub_key):
+        self.priv_key = priv_key
+        self.pub_key = pub_key

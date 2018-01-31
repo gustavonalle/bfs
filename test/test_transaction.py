@@ -1,6 +1,6 @@
 import unittest
 
-from lib.keys import PrivateKey
+from lib.keys import PrivateKey, KeyPair, PublicKey
 from lib.transaction import *
 
 
@@ -164,7 +164,7 @@ class TestTransaction(unittest.TestCase):
         tx.add_inputs(TransactionInput(prev_tx, prev_idx, prev_address, SpendType.P2PKH))
         tx.add_outputs(TransactionOutput(amount, address, SpendType.P2PKH))
 
-        signed = tx.sign(priv_k, pub_k)
+        signed = tx.sign(KeyPair(priv_k, pub_k))
 
         expected = ("0100000001be66e10da854e7aea9338c1f91cd489768d1d6d7189f586d7a3613f2a24d539600000000"
                     "6b483045022100d26da559a61d0156429ee63e31d6b0502a662b8d0fc1a6eb269658ecd436c8aa0220"
@@ -202,7 +202,7 @@ class TestTransaction(unittest.TestCase):
         tx.add_inputs(input1, input2)
         tx.add_outputs(output)
 
-        signed = tx.sign(priv_k, priv_k.create_pub_key())
+        signed = tx.sign(KeyPair(priv_k, priv_k.create_pub_key()))
 
         serialize__hex = signed.serialize().hex()
         self.assertEqual(expected, serialize__hex)
@@ -227,7 +227,7 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(expected_raw, tx.serialize().hex())
 
-        signed = tx.sign(priv_k, priv_k.create_pub_key())
+        signed = tx.sign(KeyPair(priv_k, priv_k.create_pub_key()))
 
         expected_signed = ("020000000108412b2ab931649f96bab0f27eb2e56bc2ea33744746212e02a0c7e88097ca530000000"
                            "06b4830450221008154ea4ed4c96f8076e10734a3e507f8b183e784e8578c4dde648536b1d0723f02"
@@ -237,6 +237,37 @@ class TestTransaction(unittest.TestCase):
 
         serialize__hex = signed.serialize().hex()
         self.assertEqual(expected_signed, serialize__hex)
+
+    def test_sign_4(self):
+        # P2PK + P2WPKH inputs -> P2PKH outputs
+
+        tx_input_1 = TransactionInput("9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff", 0,
+                                      "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432",
+                                      SpendType.P2PK, sequence=b'\xff\xff\xff\xee')
+        priv_k1 = PrivateKey(0xbbc27228ddcb9209d7fd6f36b02f7dfa6252af40bb2f1cbc7a557da8027ff866)
+        pub_k1 = priv_k1.create_pub_key()
+
+        tx_input_2 = TransactionInput("8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef", 1,
+                                      "tb1qr583w2swedy2acd7rung055k8t3n7udp52l3lm",
+                                      SpendType.P2WPKH)
+        priv_k2 = PrivateKey(0x619c335025c7f4012e556c2a58b2506e30b8511b53ade95ea316fd8c3286feb9)
+        pub_k2 = PublicKey(0x025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357)
+
+        tx_output_1 = TransactionOutput(112340000, "msQzKJatdWdw4rpy8sbv8puHoncseekYCf", SpendType.P2PKH)
+        tx_output_2 = TransactionOutput(223450000, "mkyWRMBNtjzZxdCcEZDYNi5CSoYnRaKACc", SpendType.P2PKH)
+
+        tx = Transaction(lock_time=17)
+        tx.add_inputs(tx_input_1, tx_input_2)
+        tx.add_outputs(tx_output_1, tx_output_2)
+
+        expected_raw = ("0100000002fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f00000000"
+                        "232103c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432aceeffffffef"
+                        "51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a010000001600141d0f17"
+                        "2a0ecb48aee1be1f2687d2963ae33f71a1ffffffff02202cb206000000001976a9148280b37df378db"
+                        "99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2"
+                        "f0167faa815988ac11000000")
+
+        self.assertEqual(expected_raw, tx.serialize().hex())
 
     @staticmethod
     def to_int(b):

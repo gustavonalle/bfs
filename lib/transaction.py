@@ -1,28 +1,34 @@
 import binascii
 import copy
 
+from lib.address import Bech32Address
 from lib.commons import *
 from lib.elliptic import Curve
 
 
 class TransactionInput(object):
 
-    def __init__(self, prev_tx_hash, index, address, spend_type):
+    def __init__(self, prev_tx_hash, index, address, spend_type, sequence=b'\xFF\xFF\xFF\xFF'):
         self.prevTxHash = prev_tx_hash
         self.index = index
         self.address = address
         self.spendType = spend_type
         if self.spendType == SpendType.P2PKH:
-            hash160 = hash160_from_address(self.address, spend_type)
-            self.prev_script = Script.create_script_pub_key(hash160, self.spendType)
+            self.pub_key_or_hash = hash160_from_address(self.address, spend_type)
+        elif self.spendType == SpendType.P2PK:
+            self.pub_key_or_hash = binascii.unhexlify(address)
+        elif self.spendType == SpendType.P2WPKH:
+            self.pub_key_or_hash = Bech32Address.from_address(address).hash160
         else:
             raise RuntimeError("spend type not supported:" + self.spendType)
+        self.prev_script = Script.create_script_pub_key(self.pub_key_or_hash, self.spendType)
+        self.sequence = sequence
 
     def serialize(self):
         payload = binascii.unhexlify(self.prevTxHash)[::-1]
         payload += self.index.to_bytes(4, 'little')
         payload += to_bytes_with_size(self.prev_script)
-        payload += b'\xFF\xFF\xFF\xFF'
+        payload += self.sequence[::-1]
         return payload
 
 
@@ -35,14 +41,16 @@ class Script(object):
     OP_HASH160 = b'\xa9'
 
     @staticmethod
-    def create_script_pub_key(hash160, spend_type):
-        hash_with_size = to_bytes_with_size(hash160)
+    def create_script_pub_key(pub_key_or_hash, spend_type):
+        hash_with_size = to_bytes_with_size(pub_key_or_hash)
         if spend_type == SpendType.P2PKH:
             return Script.OP_DUP + Script.OP_HASH160 + hash_with_size + Script.OP_EQUALVERIFY + Script.OP_CHECKSIG
         if spend_type == SpendType.P2SH:
             return Script.OP_HASH160 + hash_with_size + Script.OP_EQUAL
         if spend_type == SpendType.P2WPKH:
             return Script.OP_0 + hash_with_size
+        if spend_type == SpendType.P2PK:
+            return hash_with_size + Script.OP_CHECKSIG
         raise RuntimeError("Invalid spend type " + spend_type)
 
 
@@ -68,14 +76,18 @@ class TransactionOutput(object):
 class Transaction(object):
     elliptic = Curve()
 
-    def __init__(self, version=1):
+    def __init__(self, version=1, lock_time=0):
         self.version = version
         self.inputs = list()
         self.outputs = list()
+        self.lock_time = lock_time
+        self.segwit = False
 
     def add_inputs(self, *tx_inputs):
         for i in tx_inputs:
             self.inputs.append(i)
+            if i.spendType == SpendType.P2WPKH:
+                self.segwit = True
 
     def add_outputs(self, *tx_outputs):
         for index, o in enumerate(tx_outputs):
@@ -91,21 +103,31 @@ class Transaction(object):
         payload += to_varint(len(self.outputs))
         for o in self.outputs:
             payload += o.serialize()
-        payload += b'\x00' * 4
+        payload += int.to_bytes(self.lock_time, 4, 'little')
         if with_hash_code:
             payload += (1).to_bytes(4, 'little')
         return payload
 
-    def sign(self, private_key, public_key):
+    def sign(self, *key_pairs):
         signed_tx = copy.deepcopy(self)
+        key_pair_size = len(key_pairs)
+        if key_pair_size == 0:
+            raise RuntimeError("Must provide a list of KeyPair in order to sign!")
+
         for i, tx_input in enumerate(self.inputs):
+            if i > key_pair_size - 1:
+                key_pair = key_pairs[0]
+            else:
+                key_pair = key_pairs[i]
+            private_key = key_pair.priv_key
+            public_key = key_pair.pub_key
             template = copy.deepcopy(self)
             template.erase_input_scripts(i)
             raw = template.serialize(with_hash_code=True)
             dhash = double_sha256(raw)
-            signature = self.elliptic.ecdsa(private_key.key, public_key.point, dhash)
+            signature = self.elliptic.ecdsa(private_key.key, dhash)
             der_sig = der(signature) + b'\x01'
-            script_sig = to_bytes_with_size(der_sig) + to_bytes_with_size(public_key.get_value())
+            script_sig = to_bytes_with_size(der_sig) + to_bytes_with_size(public_key.value)
             signed_input = copy.deepcopy(tx_input)
             signed_input.prev_script = script_sig
             signed_tx.replace_input(i, signed_input)

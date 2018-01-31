@@ -9,14 +9,19 @@ BASE58_DIGITS = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
 class SpendType(Enum):
-    P2PKH = 0
-    P2SH = 1
-    P2WPKH = 2
+    P2PK = 0
+    P2PKH = 1
+    P2SH = 2
+    P2WPKH = 3
 
 
 class Network(Enum):
     MAIN_NET = b'\x00'
     TEST_NET = b'\x6f'
+
+
+class HashType(Enum):
+    SIG_HASH_ALL = b'\x01'
 
 
 def to_varint(n):

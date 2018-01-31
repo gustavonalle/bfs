@@ -6,7 +6,7 @@ from lib.commons import Network
 from lib.keys import PrivateKey
 
 
-class TestPrivateKey(TestCase):
+class TestKeys(TestCase):
 
     def test_to_from_wif(self):
         for n in range(100):
@@ -78,7 +78,7 @@ class TestPrivateKey(TestCase):
 
             pub_key = priv_key.create_pub_key()
 
-            self.assertEqual(pub_key.get_value().hex(), public_key_hex)
+            self.assertEqual(pub_key.value.hex(), public_key_hex)
 
             hash160 = pub_key.hash160()
             address = AddressV1(hash160, Network.MAIN_NET)
