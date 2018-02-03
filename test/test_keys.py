@@ -78,7 +78,7 @@ class TestKeys(TestCase):
 
             pub_key = priv_key.create_pub_key()
 
-            self.assertEqual(pub_key.value.hex(), public_key_hex)
+            self.assertEqual(pub_key.key.hex(), public_key_hex)
 
             hash160 = pub_key.hash160()
             address = AddressV1(hash160, Network.MAIN_NET)

@@ -240,6 +240,7 @@ class TestTransaction(unittest.TestCase):
 
     def test_sign_4(self):
         # P2PK + P2WPKH inputs -> P2PKH outputs
+        # See https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
 
         tx_input_1 = TransactionInput("9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff", 0,
                                       "03c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432",
@@ -249,9 +250,9 @@ class TestTransaction(unittest.TestCase):
 
         tx_input_2 = TransactionInput("8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef", 1,
                                       "tb1qr583w2swedy2acd7rung055k8t3n7udp52l3lm",
-                                      SpendType.P2WPKH)
+                                      SpendType.P2WPKH, prev_amount=6)
         priv_k2 = PrivateKey(0x619c335025c7f4012e556c2a58b2506e30b8511b53ade95ea316fd8c3286feb9)
-        pub_k2 = PublicKey(0x025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357)
+        pub_k2 = PublicKey(binascii.unhexlify("025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"))
 
         tx_output_1 = TransactionOutput(112340000, "msQzKJatdWdw4rpy8sbv8puHoncseekYCf", SpendType.P2PKH)
         tx_output_2 = TransactionOutput(223450000, "mkyWRMBNtjzZxdCcEZDYNi5CSoYnRaKACc", SpendType.P2PKH)
@@ -268,6 +269,20 @@ class TestTransaction(unittest.TestCase):
                         "f0167faa815988ac11000000")
 
         self.assertEqual(expected_raw, tx.serialize().hex())
+
+        expected_signed = ("01000000000102fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f00"
+                           "000000494830450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd"
+                           "30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01eeffff"
+                           "ffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffff"
+                           "ffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac909351"
+                           "0d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac000247304402203609"
+                           "e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c45183315"
+                           "61406f90300e8f3358f51928d43c212a8caed02de67eebee0121025476c2e83188368da1ff3e292e"
+                           "7acafcdb3566bb0ad253f62fc70f07aeee635711000000")
+
+        signed = tx.sign(KeyPair(priv_k1, pub_k1), KeyPair(priv_k2, pub_k2))
+
+        self.assertEqual(expected_signed, signed.serialize().hex())
 
     @staticmethod
     def to_int(b):

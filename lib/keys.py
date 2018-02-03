@@ -57,11 +57,11 @@ class PrivateKey(object):
 class PublicKey(object):
 
     def __init__(self, value):
-        self.value = value
+        self.key = value
 
     # https://en.bitcoin.it/wiki/Technical_background_of_version_1_Bitcoin_addresses
     def hash160(self):
-        digest = hashlib.sha256(self.value).digest()
+        digest = hashlib.sha256(self.key).digest()
         hash160 = hashlib.new('ripemd160', digest).digest()
         return hash160
 
@@ -72,7 +72,7 @@ class PublicKey(object):
         return Bech32Address.from_hash160(self.hash160(), network)
 
     def __str__(self):
-        return f"({hex(self.value)}"
+        return f"{self.key.hex()}"
 
 
 class KeyPair(object):

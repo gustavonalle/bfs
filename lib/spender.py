@@ -1,4 +1,5 @@
 from lib.commons import btc_to_satoshis
+from lib.keys import KeyPair
 from lib.transaction import Transaction, TransactionInput, TransactionOutput, SpendType
 
 
@@ -58,5 +59,5 @@ class Spender(object):
             tx.add_outputs(tx_output)
 
         public_key = private_key.create_pub_key()
-        signed = tx.sign(private_key, public_key)
+        signed = tx.sign(KeyPair(private_key, public_key))
         return signed.serialize()
