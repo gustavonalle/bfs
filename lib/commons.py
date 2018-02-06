@@ -24,6 +24,14 @@ class HashType(Enum):
     SIG_HASH_ALL = b'\x01'
 
 
+def get_spend_type(address):
+    if address.startswith("tb1") or address.startswith("bc1"):
+        return SpendType.P2WPKH
+    if address.startswith("3") or address.startswith("2"):
+        return SpendType.P2SH
+    return SpendType.P2PKH
+
+
 def to_varint(n):
     if n <= 0xfc:
         return n.to_bytes(1, 'little')

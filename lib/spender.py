@@ -1,14 +1,6 @@
-from lib.commons import btc_to_satoshis
+from lib.commons import btc_to_satoshis, get_spend_type
 from lib.keys import KeyPair
-from lib.transaction import Transaction, TransactionInput, TransactionOutput, SpendType
-
-
-def get_spend_type(address):
-    if address.startswith("tb1") or address.startswith("bc1"):
-        return SpendType.P2WPKH
-    if address.startswith("3"):
-        return SpendType.P2SH
-    return SpendType.P2PKH
+from lib.transaction import Transaction, TransactionInput, TransactionOutput
 
 
 class Utxo(object):
