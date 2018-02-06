@@ -284,6 +284,29 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(expected_signed, signed.serialize().hex())
 
+    def test_sign_5(self):
+        tx_input_1 = TransactionInput("b9b72078c53511dfdb80ba91e04696cfe479b320a2dfc17a96be40ce2884a62f", 0,
+                                      "tb1qfeytr2u0d3e3tny5kyjvjule3srx33eclcx6sy",
+                                      SpendType.P2WPKH, 0.99996220)
+        priv_k1 = PrivateKey.from_wif("cVZiWLak3RfzgFZtLeZ87TKnFwaG1hBgxovNmv9XwmaSSrNLXKp1")
+        pub_k1 = priv_k1.create_pub_key()
+
+        tx_output_1 = TransactionOutput(99994220, "n3WUs6uCpAc1at2u13ZLRQKf8wuqgVdZr4", SpendType.P2PKH)
+
+        tx = Transaction()
+        tx.add_inputs(tx_input_1)
+        tx.add_outputs(tx_output_1)
+
+        signed = tx.sign(KeyPair(priv_k1, pub_k1))
+
+        expected_signed = ("010000000001012fa68428ce40be967ac1dfa220b379e4cf9646e091ba80dbdf1135c57820b7b90000000000"
+                           "ffffffff016ccaf505000000001976a914f13bdea27f1fdfb164d083dd827ff55eb140d68688ac0248304502"
+                           "2100fd3e612284f6d107fcb40d8dad1d7d57ac570fe11116a7f61fb80f5905e4124e0220102c75534b37a9f3"
+                           "b82fc42994bc35aa07f1ec9113e34b7d8489dc0c8bbbeb5a0121037c32fea2feddc1b8a500ec4ff9b597dc72"
+                           "d237ed205aa395704035172d74a05c00000000")
+
+        self.assertEqual(expected_signed, signed.serialize().hex())
+
     @staticmethod
     def to_int(b):
         return int.from_bytes(b, 'big')

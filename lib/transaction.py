@@ -20,6 +20,8 @@ class TransactionInput(object):
             self.pub_key_or_hash = binascii.unhexlify(address)
         elif self.spendType == SpendType.P2WPKH:
             self.pub_key_or_hash = Bech32Address.from_address(address).hash160
+            if self.prev_amount == 0:
+                raise RuntimeError("UTXO amount must be provided for P2WPKH Inputs")
         else:
             raise RuntimeError("spend type not supported:" + self.spendType)
         self.prev_script = Script.script_pub_key(self.pub_key_or_hash, self.spendType)

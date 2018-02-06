@@ -3,6 +3,14 @@ from lib.keys import KeyPair
 from lib.transaction import Transaction, TransactionInput, TransactionOutput, SpendType
 
 
+def get_spend_type(address):
+    if address.startswith("tb1") or address.startswith("bc1"):
+        return SpendType.P2WPKH
+    if address.startswith("3"):
+        return SpendType.P2SH
+    return SpendType.P2PKH
+
+
 class Utxo(object):
 
     def __init__(self, tx_hash, index, address, amount_btc):
@@ -47,15 +55,17 @@ class Spender(object):
         if fee > total_spend * 0.1:
             raise RuntimeError("Fee is larger than 10% of the amount to spend!")
 
-    def create_p2pkh_tx(self, private_key):
+    def create_tx(self, private_key):
         tx = Transaction()
 
         for utxo in self.utxos:
-            tx_input = TransactionInput(utxo.tx_hash, utxo.index, utxo.address, SpendType.P2PKH)
+            tx_input = TransactionInput(utxo.tx_hash, utxo.index, utxo.address, get_spend_type(utxo.address),
+                                        utxo.amount_btc)
             tx.add_inputs(tx_input)
 
         for destination in self.destinations:
-            tx_output = TransactionOutput(btc_to_satoshis(destination.amount_btc), destination.address, SpendType.P2PKH)
+            tx_output = TransactionOutput(btc_to_satoshis(destination.amount_btc), destination.address,
+                                          get_spend_type(destination.address))
             tx.add_outputs(tx_output)
 
         public_key = private_key.create_pub_key()
