@@ -8,7 +8,8 @@ from lib.elliptic import Curve
 
 class TransactionInput(object):
 
-    def __init__(self, prev_tx_hash, index, address, spend_type, prev_amount=0, sequence=b'\xFF\xFF\xFF\xFF'):
+    def __init__(self, prev_tx_hash, index, address, spend_type, prev_amount=0, sequence=b'\xFF\xFF\xFF\xFF',
+                 pub_key=None):
         self.prev_amount = prev_amount
         self.prevTxHash = prev_tx_hash
         self.index = index
@@ -22,6 +23,10 @@ class TransactionInput(object):
             self.pub_key_or_hash = Bech32Address.from_address(address).hash160
             if self.prev_amount == 0:
                 raise RuntimeError("UTXO amount must be provided for P2WPKH Inputs")
+        elif self.spendType == SpendType.P2SH:
+            self.pub_key_or_hash = hash160_from_address(self.address, spend_type)
+        elif self.spendType == SpendType.P2SH_P2WPKH:
+            self.pub_key_or_hash = pub_key.hash160()
         else:
             raise RuntimeError("spend type not supported:" + self.spendType)
         self.prev_script = Script.script_pub_key(self.pub_key_or_hash, self.spendType)
@@ -63,6 +68,8 @@ class Script(object):
             return Script.OP_0 + hash_with_size
         if spend_type == SpendType.P2PK:
             return hash_with_size + Script.OP_CHECKSIG
+        if spend_type == SpendType.P2SH_P2WPKH:
+            return to_bytes_with_size(Script.OP_0 + hash_with_size)
         raise RuntimeError("Invalid spend type " + spend_type)
 
 
@@ -155,8 +162,8 @@ class Transaction(object):
 
     def create_pre_image_segwit(self, idx_input):
         segwit_input = self.inputs[idx_input]
-        if segwit_input.spendType != SpendType.P2WPKH:
-            raise RuntimeError("Input must be P2WPKH")
+        if segwit_input.spendType != SpendType.P2WPKH and segwit_input.spendType != SpendType.P2SH_P2WPKH:
+            raise RuntimeError("Input must be segwit compatible!")
         payload = self.version.to_bytes(4, 'little')
         payload += self.hash_prev_outs()
         payload += self.hash_prev_seq()
@@ -176,7 +183,7 @@ class Transaction(object):
 
     @classmethod
     def is_segwit(cls, tx_input):
-        return tx_input.spendType == SpendType.P2WPKH
+        return tx_input.spendType == SpendType.P2WPKH or tx_input.spendType == SpendType.P2SH_P2WPKH
 
     def sign(self, *key_pairs):
         witnesses = list()
@@ -208,7 +215,8 @@ class Transaction(object):
             else:
                 has_witness = True
                 witnesses.append(b'\x02' + script_sig)
-                signed_input.prev_script = None
+                if tx_input.spendType == SpendType.P2WPKH:
+                    signed_input.prev_script = None
             signed_tx.replace_input(i, signed_input)
 
         if has_witness:

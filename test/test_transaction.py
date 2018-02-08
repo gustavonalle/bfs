@@ -117,7 +117,7 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(expected, raw.hex())
 
-    def test_MultipleInput_MultipleOutpute(self):
+    def test_MultipleInput_MultipleOutputs(self):
         # https://api.blockcypher.com/v1/btc/main/txs/b4c2edbe77af5ef1f69f91256fc84d0902037ead0bbe8f600b6c4d170afecfec?limit=50&includeHex=true
         # multiple inputs and multiple outputs, one p2pkh other p2sh
         prev_tx_1 = "5e2e877f7768a2a85018509776013242bc829a599c67a702f0a01b8815626a43"
@@ -304,6 +304,59 @@ class TestTransaction(unittest.TestCase):
                            "2100fd3e612284f6d107fcb40d8dad1d7d57ac570fe11116a7f61fb80f5905e4124e0220102c75534b37a9f3"
                            "b82fc42994bc35aa07f1ec9113e34b7d8489dc0c8bbbeb5a0121037c32fea2feddc1b8a500ec4ff9b597dc72"
                            "d237ed205aa395704035172d74a05c00000000")
+
+        self.assertEqual(expected_signed, signed.serialize().hex())
+
+    def test_sign_6(self):
+        # P2SH(P2WPKH) -> P2PKH
+        priv_k1 = PrivateKey.from_wif("cTrgmEubqR1ycAupUhAPHAZuax9Sm1z9MXnu1yJ2U9QveVJj5dw6")
+        pub_k1 = priv_k1.create_pub_key()
+        tx_input_1 = TransactionInput("84a5fd831b4bbc248c5bbf803e9437a9fd16c9353e36a83cb91601198c721ffa", 1,
+                                      "2N3fPnXTv2VhBFJfXjjKhpnywu8DdY2Azs4",
+                                      SpendType.P2SH_P2WPKH, 0.09999705, pub_key=pub_k1)
+
+        tx_output_1 = TransactionOutput(9979705, "n3WUs6uCpAc1at2u13ZLRQKf8wuqgVdZr4", SpendType.P2PKH)
+
+        tx = Transaction(version=2)
+        tx.add_inputs(tx_input_1)
+
+        tx.add_outputs(tx_output_1)
+
+        signed = tx.sign(KeyPair(priv_k1, pub_k1))
+
+        expected_signed = ("02000000000101fa1f728c190116b93ca8363e35c916fda937943e80bf5b8c24bc4b1b83fda58401"
+                           "0000001716001403daeefdf968071d4f4eb807e1ce260df8730b2bffffffff013947980000000000"
+                           "1976a914f13bdea27f1fdfb164d083dd827ff55eb140d68688ac0247304402205dae720734647b5d"
+                           "aa6b825b5b48b31ab4781ad7acc61104f67d196acab3ada502204db4725f84710b0ecb0547d57d8c"
+                           "0bc0aa8e5ee35c5dc2da533cf62c54a1f767012103329c021b31a332d6004019e23f74df43a3fde9"
+                           "4fc076184bfb561b7b2f7ae82300000000")
+
+        self.assertEqual(expected_signed, signed.serialize().hex())
+
+    def test_sign_7(self):
+        # From https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
+        priv_k1 = PrivateKey(0xeb696a065ef48a2192da5b28b694f87544b30fae8327c4510137a922f32c6dcf)
+        pub_k1 = priv_k1.create_pub_key()
+        tx_input_1 = TransactionInput("77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb", 1,
+                                      "2MyjiCXmqtu2AxSiRCz2VeuYD98bUhXRzNR",
+                                      SpendType.P2SH_P2WPKH, 10, sequence=b'\xff\xff\xff\xfe', pub_key=pub_k1)
+
+        tx_output_1 = TransactionOutput(199996600, "mvVvBvBpq5f51q8bPygkcSAoVabq5heFTr", SpendType.P2PKH)
+        tx_output_2 = TransactionOutput(800000000, "n4bW2Nahtzqm4HfVgo9xbft9Z3Crw1veuJ", SpendType.P2PKH)
+
+        tx = Transaction(lock_time=1170)
+        tx.add_inputs(tx_input_1)
+        tx.add_outputs(tx_output_1, tx_output_2)
+
+        signed = tx.sign(KeyPair(priv_k1, pub_k1))
+
+        expected_signed = ("01000000000101db6b1b20aa0fd7b23880be2ecbd4a98130974cf4748fb66092ac4d3ceb1a547701"
+                           "0000001716001479091972186c449eb1ded22b78e40d009bdf0089feffffff02b8b4eb0b00000000"
+                           "1976a914a457b684d7f0d539a46a45bbc043f35b59d0d96388ac0008af2f000000001976a914fd27"
+                           "0b1ee6abcaea97fea7ad0402e8bd8ad6d77c88ac02473044022047ac8e878352d3ebbde1c94ce3a1"
+                           "0d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622"
+                           "ad4010726870540656fe9dcb012103ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f"
+                           "7d6f93a2a2687392040000")
 
         self.assertEqual(expected_signed, signed.serialize().hex())
 

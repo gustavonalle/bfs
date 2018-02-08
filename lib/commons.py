@@ -13,6 +13,7 @@ class SpendType(Enum):
     P2PKH = 1
     P2SH = 2
     P2WPKH = 3
+    P2SH_P2WPKH = 4
 
 
 class Network(Enum):

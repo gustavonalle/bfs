@@ -13,7 +13,10 @@ class AddressV1(object):
     # https://en.bitcoin.it/wiki/Base58Check_encoding
     @staticmethod
     def create(hash160, address_type):
-        step1 = address_type.value + hash160
+        return AddressV1.create_with_prefix(hash160, address_type.value)
+
+    def create_with_prefix(hash160, prefix):
+        step1 = prefix + hash160
         step2 = double_sha256(step1)
         step3 = step2[0:4]
         step4 = step1 + step3

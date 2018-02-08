@@ -2,8 +2,9 @@ import hashlib
 import secrets
 
 from lib import commons
-from lib.address import AddressV1, Bech32Address
+from lib.address import AddressV1, Bech32Address, to_bytes_with_size, sha256
 from lib.elliptic import Curve
+from lib.transaction import Script
 
 
 class PrivateKey(object):
@@ -70,6 +71,20 @@ class PublicKey(object):
 
     def get_segwit_address(self, network):
         return Bech32Address.from_hash160(self.hash160(), network)
+
+    def get_segwit_p2sh_address(self, network):
+        key_hash = self.hash160()
+
+        redeem_script = Script.OP_0 + to_bytes_with_size(key_hash)
+
+        hash160_redeem = hashlib.new('ripemd160', sha256(redeem_script)).digest()
+
+        if network.TEST_NET:
+            prefix = b'\xc4'
+        else:
+            prefix = b'x\05'
+
+        return AddressV1.create_with_prefix(hash160_redeem, prefix)
 
     def __str__(self):
         return f"{self.key.hex()}"

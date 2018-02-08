@@ -8,6 +8,12 @@ from lib.keys import PrivateKey
 
 class TestKeys(TestCase):
 
+    def test_p2sh_segwit(self):
+        pk = PrivateKey.from_wif("cQz842i4WnRpyofBi1bmRTJb1SXnXxsPvVaXmZ1nKZ1qJT4gsHFn")
+        pub_key = pk.create_pub_key()
+        address = pub_key.get_segwit_p2sh_address(Network.TEST_NET)
+        self.assertEqual("2NE573uymXZwUZqZydYYauxE6v57s4dZx47", address)
+
     def test_to_from_wif(self):
         for n in range(100):
             pk = PrivateKey()
