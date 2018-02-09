@@ -29,7 +29,7 @@ def get_spend_type(address):
     if address.startswith("tb1") or address.startswith("bc1"):
         return SpendType.P2WPKH
     if address.startswith("3") or address.startswith("2"):
-        return SpendType.P2SH
+        return SpendType.P2SH_P2WPKH
     return SpendType.P2PKH
 
 

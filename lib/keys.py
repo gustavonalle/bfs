@@ -23,7 +23,7 @@ class PrivateKey(object):
     def from_wif(cls, wif):
         start = wif[0]
         compressed = False
-        if start == "L" or start == "K" or start == "c" or start == "9":
+        if start == "L" or start == "K" or start == "c":
             compressed = True
         decoded = commons.base58_decode(wif)
         b = decoded.to_bytes(decoded.bit_length() // 8, 'big')

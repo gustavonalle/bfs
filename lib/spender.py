@@ -5,7 +5,8 @@ from lib.transaction import Transaction, TransactionInput, TransactionOutput
 
 class Utxo(object):
 
-    def __init__(self, tx_hash, index, address, amount_btc):
+    def __init__(self, tx_hash, index, address, amount_btc, private_key):
+        self.private_key = private_key
         self.amount_btc = amount_btc
         self.address = address
         self.index = index
@@ -47,12 +48,14 @@ class Spender(object):
         if fee > total_spend * 0.1:
             raise RuntimeError("Fee is larger than 10% of the amount to spend!")
 
-    def create_tx(self, private_key):
-        tx = Transaction()
-
+    def create_tx(self):
+        tx = Transaction(version=2)
+        keys = []
         for utxo in self.utxos:
+            pub_key = utxo.private_key.create_pub_key()
+            keys.append(KeyPair(utxo.private_key, pub_key))
             tx_input = TransactionInput(utxo.tx_hash, utxo.index, utxo.address, get_spend_type(utxo.address),
-                                        utxo.amount_btc)
+                                        prev_amount=utxo.amount_btc, pub_key=pub_key)
             tx.add_inputs(tx_input)
 
         for destination in self.destinations:
@@ -60,6 +63,5 @@ class Spender(object):
                                           get_spend_type(destination.address))
             tx.add_outputs(tx_output)
 
-        public_key = private_key.create_pub_key()
-        signed = tx.sign(KeyPair(private_key, public_key))
+        signed = tx.sign(*keys)
         return signed.serialize()

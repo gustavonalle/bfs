@@ -14,6 +14,16 @@ class TestKeys(TestCase):
         address = pub_key.get_segwit_p2sh_address(Network.TEST_NET)
         self.assertEqual("2NE573uymXZwUZqZydYYauxE6v57s4dZx47", address)
 
+    def test_from_wif(self):
+        secret = 0x22861a6e8a0670f6388847e83bbea3ed580280b612c11470998baf11ed95d032
+        pk = PrivateKey(secret, compression=False)
+        wif = pk.to_wif(Network.TEST_NET)
+
+        self.assertEqual(wif, "91r82bjCYhYnimoCoqySeNk9AMaHFgPEedzXSCwb39vHiZLSBCQ")
+
+        pk = PrivateKey.from_wif("91r82bjCYhYnimoCoqySeNk9AMaHFgPEedzXSCwb39vHiZLSBCQ")
+        self.assertEqual(hex(pk.key), "0x22861a6e8a0670f6388847e83bbea3ed580280b612c11470998baf11ed95d032")
+
     def test_to_from_wif(self):
         for n in range(100):
             pk = PrivateKey()
