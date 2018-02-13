@@ -95,12 +95,13 @@ class Transaction(object):
     marker = b'\x00'
     flag = b'\x01'
 
-    def __init__(self, version=1, lock_time=0):
+    def __init__(self, sig_hash_type=0x1, version=1, lock_time=0):
         self.version = version
         self.inputs = list()
         self.outputs = list()
         self.lock_time = lock_time
         self.witness = b''
+        self.sig_hash_type = sig_hash_type
 
     def add_inputs(self, *tx_inputs):
         for i in tx_inputs:
@@ -134,7 +135,7 @@ class Transaction(object):
             payload += o.serialize()
         payload += int.to_bytes(self.lock_time, 4, 'little')
         if with_hash_code:
-            payload += (1).to_bytes(4, 'little')
+            payload += self.sig_hash_type.to_bytes(4, 'little')
         return payload
 
     def serialize(self, with_hash_code=False):
@@ -173,7 +174,7 @@ class Transaction(object):
         payload += segwit_input.sequence[::-1]
         payload += self.hash_outputs()
         payload += int.to_bytes(self.lock_time, 4, 'little')
-        payload += (1).to_bytes(4, 'little')
+        payload += self.sig_hash_type.to_bytes(4, 'little')
         return payload
 
     def create_pre_image_legacy(self, idx_input):
@@ -204,7 +205,7 @@ class Transaction(object):
             raw = self.pre_image(i)
             dhash = double_sha256(raw)
             signature = self.elliptic.ecdsa(private_key.key, dhash)
-            der_sig = der(signature) + b'\x01'
+            der_sig = der(signature) + to_varint(self.sig_hash_type)
             script_sig = to_bytes_with_size(der_sig)
             if tx_input.spendType != SpendType.P2PK:
                 script_sig += to_bytes_with_size(public_key.key)

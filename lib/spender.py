@@ -21,6 +21,8 @@ class Destination(object):
 
 
 class Spender(object):
+    tx_version = 2
+    sig_hash_type = 0x1
 
     def __init__(self):
         self.utxos = list()
@@ -49,7 +51,7 @@ class Spender(object):
             raise RuntimeError("Fee is larger than 10% of the amount to spend!")
 
     def create_tx(self):
-        tx = Transaction(version=2)
+        tx = Transaction(version=self.tx_version, sig_hash_type=self.sig_hash_type)
         keys = []
         for utxo in self.utxos:
             pub_key = utxo.private_key.create_pub_key()
