@@ -5,5 +5,5 @@ class B2XSpender(Spender):
 
     def __init__(self):
         super().__init__()
-        self.tx_version = 1
+        self.tx_version = 2
         self.sig_hash_type = 0x21

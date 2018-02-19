@@ -7,23 +7,44 @@ from lib.spender import Utxo, Destination
 
 class TestB2XSpender(TestCase):
 
-    def test_spend_bech32(self):
-        pk = PrivateKey.from_wif("LEDZf6CbScCzSxpHHEkb23cstcvrzZMLFws7Px2BBa8atj4vabN9")
+    def test_send_to_bech32(self):
+        # Generated with regtest
+        pk = PrivateKey.from_wif("cVQ1cnAfsQPAexvQwSTD2Yqeoofr34aNjuLPjQsvcyXsSMcxc5eZ")
 
-        utxo = Utxo("2b34bb178f07d143de91764d4e7d1c2c031975ecf1a7a2a0d4131445a3373b5b", 0,
-                    "bc1qvhgz26zt27zu45jqe8tjsgctv20xy7u43n4e9u", 0.00010000, pk)
+        utxo = Utxo("fba837c65dcade7332d6dc54826cd4f4de402a07a13c01889a940e91fcbb0e86", 0,
+                    "mqbqnHixVLLpT4p2pzdGPuYQsj5n9JPF5U", 49.99990000, pk)
 
         spender = B2XSpender()
         spender.add_utxos(utxo)
-        spender.add_destinations(Destination(0.00001001, "1P7w6ur2WZRceFHTPWMd65P2p8K2mEHEBe"))
+        spender.add_destinations(Destination(49.99980000, "tb1qcydtudnm69tss5daad459rv8qaee485cux9vev"))
 
         tx_hex = spender.create_tx().hex()
 
-        expected = ("010000000001015b3b37a3451413d4a0a2a7f1ec7519032c1c7d4e4d7691de43d1078f17bb"
-                    "342b0000000000ffffffff01ea030000000000001976a914f2a26cce0a92ca350bf204ed8d"
-                    "4c94bf2ea2d8d388ac024830450221009fbebefd4435b6ef827b39be01503fc712c4664b22"
-                    "447acbadeaaa40c7dff7a7022079e95c9cd4a3bed2ea6a87cac971b8d11f1b5b1f0238c496"
-                    "28f09084ad72998e212103cb263a76efe6fce59b02ae64b8d11dd5022a272704c7f3eb44e2"
-                    "44197dfb03b000000000")
+        expected = ("0200000001860ebbfc910e949a88013ca1072a40def4d46c8254dcd63273deca5dc637a8fb000000006a4730440"
+                    "22040dcd2952802af9dd9add4c02c82104f356acf848e2679d49e2b48d1f68815ea02201d1d97bd27604fb8c720"
+                    "514f98abc1436eefa1390df622ea9ac822c78328c24321210231cad08d94f860b4dcf9ef717544946c70dad4d22"
+                    "e8c569a2c8da287834f39aaffffffff01e0a3052a01000000160014c11abe367bd1570851bdeb6b428d8707739a"
+                    "9e9800000000")
+
+        self.assertEqual(expected, tx_hex)
+
+    def test_spend_p2pkh(self):
+        # Generated with regtest
+        pk = PrivateKey.from_wif("cVhpUkwh5Nboa1ZX9N8XuBAWXQuFUNAoPhYegUBuEbSPzYfgxS2C")
+
+        utxo = Utxo("ff8e86772fa46e8ec35d40592c59a6320d32d499c4f1e393a5d2ab611334e508", 0,
+                    "mjrhteDrywvuQerJCmCGfuTSdZoEea54Jo", 50, pk)
+
+        spender = B2XSpender()
+        spender.add_utxos(utxo)
+        spender.add_destinations(Destination(49.9999, "mqbqnHixVLLpT4p2pzdGPuYQsj5n9JPF5U"))
+
+        tx_hex = spender.create_tx().hex()
+
+        expected = ("020000000108e5341361abd2a593e3f1c499d4320d32a6592c59405dc38e6ea42f77868eff00000000"
+                    "6a4730440220630327d0f0b55285640075c8eaea439adebdc0713bad32469bdb73b8d18e5fe7022066"
+                    "3329830183c8f6522681d38be7a12696dc926fe0bf31b3abed2f33cc41b64b212102f2717a40c42c69"
+                    "1bbe291a58c8c43877e170319c4eee18f9140557c5632e35deffffffff01f0ca052a010000001976a9"
+                    "146e9de6950a429d009c08a35f731fd7896baecf9588ac00000000")
 
         self.assertEqual(expected, tx_hex)
