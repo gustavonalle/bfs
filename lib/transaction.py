@@ -95,13 +95,14 @@ class Transaction(object):
     marker = b'\x00'
     flag = b'\x01'
 
-    def __init__(self, sig_hash_type=0x1, version=1, lock_time=0):
+    def __init__(self, sig_hash_type=0x1, version=1, lock_time=0, sig_hash_type_pre_image=0x1):
         self.version = version
         self.inputs = list()
         self.outputs = list()
         self.lock_time = lock_time
         self.witness = b''
         self.sig_hash_type = sig_hash_type
+        self.sig_hash_type_pre_image = sig_hash_type_pre_image
 
     def add_inputs(self, *tx_inputs):
         for i in tx_inputs:
@@ -135,7 +136,7 @@ class Transaction(object):
             payload += o.serialize()
         payload += int.to_bytes(self.lock_time, 4, 'little')
         if with_hash_code:
-            payload += self.sig_hash_type.to_bytes(4, 'little')
+            payload += self.sig_hash_type_pre_image.to_bytes(4, 'little')
         return payload
 
     def serialize(self, with_hash_code=False):
@@ -174,7 +175,7 @@ class Transaction(object):
         payload += segwit_input.sequence[::-1]
         payload += self.hash_outputs()
         payload += int.to_bytes(self.lock_time, 4, 'little')
-        payload += self.sig_hash_type.to_bytes(4, 'little')
+        payload += self.sig_hash_type_pre_image.to_bytes(4, 'little')
         return payload
 
     def create_pre_image_legacy(self, idx_input):
