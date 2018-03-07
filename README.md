@@ -15,7 +15,8 @@ Currently Bitcoin features supported:
 
 Hard forks supported:
 
-* [B2X](https://b2x-segwit.io) 
+* [B2X](https://b2x-segwit.io)
+* [BTN](http://btn.kim) 
 
 
 ## Usage examples:

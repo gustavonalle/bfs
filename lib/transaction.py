@@ -6,6 +6,12 @@ from lib.commons import *
 from lib.elliptic import Curve
 
 
+class Sign(Enum):
+    SEGWIT = 0
+    LEGACY = 1
+    AUTO = 2
+
+
 class TransactionInput(object):
 
     def __init__(self, prev_tx_hash, index, address, spend_type, prev_amount=0, sequence=b'\xFF\xFF\xFF\xFF',
@@ -95,7 +101,7 @@ class Transaction(object):
     marker = b'\x00'
     flag = b'\x01'
 
-    def __init__(self, sig_hash_type=0x1, version=1, lock_time=0, sig_hash_type_pre_image=0x1):
+    def __init__(self, sig_hash_type=0x1, version=1, lock_time=0, sig_hash_type_pre_image=0x1, sign_style=Sign.AUTO):
         self.version = version
         self.inputs = list()
         self.outputs = list()
@@ -103,6 +109,7 @@ class Transaction(object):
         self.witness = b''
         self.sig_hash_type = sig_hash_type
         self.sig_hash_type_pre_image = sig_hash_type_pre_image
+        self.sign_style = sign_style
 
     def add_inputs(self, *tx_inputs):
         for i in tx_inputs:
@@ -164,8 +171,6 @@ class Transaction(object):
 
     def create_pre_image_segwit(self, idx_input):
         segwit_input = self.inputs[idx_input]
-        if segwit_input.spendType != SpendType.P2WPKH and segwit_input.spendType != SpendType.P2SH_P2WPKH:
-            raise RuntimeError("Input must be segwit compatible!")
         payload = self.version.to_bytes(4, 'little')
         payload += self.hash_prev_outs()
         payload += self.hash_prev_seq()
@@ -236,6 +241,6 @@ class Transaction(object):
                 tx_input.prev_script = None
 
     def pre_image(self, i):
-        if self.is_segwit(self.inputs[i]):
+        if self.is_segwit(self.inputs[i]) or self.sign_style == Sign.SEGWIT:
             return self.create_pre_image_segwit(i)
         return self.create_pre_image_legacy(i)

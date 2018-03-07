@@ -1,6 +1,6 @@
 from lib.commons import btc_to_satoshis, get_spend_type
 from lib.keys import KeyPair
-from lib.transaction import Transaction, TransactionInput, TransactionOutput
+from lib.transaction import Transaction, TransactionInput, TransactionOutput, Sign
 
 
 class Utxo(object):
@@ -24,6 +24,7 @@ class Spender(object):
     tx_version = 2
     sig_hash_type = 0x1
     sig_hash_type_pre_image = 0x1
+    sign_type = Sign.AUTO
 
     def __init__(self):
         self.utxos = list()
@@ -52,7 +53,8 @@ class Spender(object):
             raise RuntimeError("Fee is larger than 10% of the amount to spend!")
 
     def create_tx(self):
-        tx = Transaction(version=self.tx_version, sig_hash_type=self.sig_hash_type, sig_hash_type_pre_image=self.sig_hash_type_pre_image)
+        tx = Transaction(version=self.tx_version, sig_hash_type=self.sig_hash_type,
+                         sig_hash_type_pre_image=self.sig_hash_type_pre_image, sign_style=self.sign_type)
         keys = []
         for utxo in self.utxos:
             pub_key = utxo.private_key.create_pub_key()
