@@ -57,9 +57,9 @@ class Bech32Address(object):
     @classmethod
     def from_hash160(cls, hash160, network):
         hrp = None
-        if network == Network.TEST_NET:
+        if network.name == 'TEST_NET':
             hrp = "tb"
-        if network == Network.MAIN_NET:
+        if network.name == 'MAIN_NET':
             hrp = "bc"
 
         address = bech32.encode(hrp, cls.witver, list(hash160))
