@@ -7,6 +7,48 @@ from lib.spender import Utxo, Destination
 
 class TestBTNSpender(TestCase):
 
+    def test_send_to_bech32(self):
+        pk = PrivateKey.from_wif("cR735DHmZMw1KGAoLaKeCNYTY1iBQ2hwYs73xGTSMGrpXKG8y2bV")
+
+        utxo = Utxo("2ab1ad93934c2c02060a42cf71e9a37556929679dc78e9d18ec0d01951e2bc62", 0,
+                    "mptcoGaQcovBDqJEXyf8XRUdTGYPCfFxq1", 7.99, pk)
+
+        spender = BTNSpender()
+        spender.add_utxos(utxo)
+        spender.add_destinations(Destination(7.98, "tb1quhs3fvy00aq80zcgvtdd9rrt835ecch4ay5ys2"))
+
+        tx_hex = spender.create_tx().hex()
+
+        expected = ("020000000162bce25119d0c08ed1e978dc7996925675a3e971cf420a06022c4c9393adb12a"
+                    "000000006a47304402206a71dcec6f1f8850e930372de047164b2a4a4bb6e6ec47af134ae5"
+                    "0b0997537902202f22db1c2b77a9458bdd2783c9c691bf654c0066acb3c5832000c7bb2f86"
+                    "7a6a412103885eee783dfc7892f354544796be139324f637c8da33655b53852fcbf3d6d65d"
+                    "ffffffff018083902f00000000160014e5e114b08f7f40778b0862dad28c6b3c699c62f500"
+                    "000000")
+
+        self.assertEqual(expected, tx_hex)
+
+    def test_spend_p2wpkh(self):
+        pk = PrivateKey.from_wif("cS8ycBgjYBuNgeBacXRbvbAtbqoki13yUond8NKnipyFzyMrJc6m")
+
+        utxo = Utxo("f46bd6e93fdd51876c2d7639cfd705b82c60b8301f2a8479b80585ed9b246826", 0,
+                    "tb1quhs3fvy00aq80zcgvtdd9rrt835ecch4ay5ys2", 7.98, pk)
+
+        spender = BTNSpender()
+        spender.add_utxos(utxo)
+        spender.add_destinations(Destination(7.97, "mqmXo6XKQYgPHVS4zFS6MApdpXcMs47vda"))
+
+        tx_hex = spender.create_tx().hex()
+
+        expected = ("020000000001012668249bed8505b879842a1f30b8602cb805d7cf39762d6c8751dd3fe9d66bf"
+                    "40000000000ffffffff014041812f000000001976a91470730bda4463441b52a393ccced5aab0"
+                    "77cb4cae88ac02483045022100f3e47f61407c6d7f620c78ba56a65a285f7483e85f06da35014"
+                    "101808d75931c0220638a8a91fa8b1d747da9dc04730ed161c12e44f4e7e39ff9066e00277492"
+                    "468d41210358848ad624557628636d72e290c259478774504072b8504a6bb7ea7bb51c8d32000"
+                    "00000")
+
+        self.assertEqual(expected, tx_hex)
+
     def test_spend_p2pkh(self):
         pk = PrivateKey.from_wif("cU4TK4AU8zCSVAwPkBdgreQauTnMSERoiFpvd1MJtyavD27fpYL2")
 

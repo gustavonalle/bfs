@@ -41,7 +41,7 @@ class TestB2XSpender(TestCase):
         spender.add_destinations(Destination(24.8, "mxoVHNnvAEGYCFdPRR8yJw1yuuZfzkr2e7"))
 
         tx_hex = spender.create_tx().hex()
-        print(tx_hex)
+
         expected = ("020000000001014c95150232242019b35412579dc0abc09bff72ee9efbb72ba2264c44fb7c7d200000000000fffff"
                     "fff0100ccd193000000001976a914bd9aa9556109944bb1d984286eec13199c723deb88ac02473044022026892552"
                     "385d049b847e15c8436fc1053fc4c50f376f9dcf7520cbfc2d6ed8cf022078d323b34aa09845c8d362007c2bf7204"
