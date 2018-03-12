@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from lib.BPASpender import BPASpender
+from lib.bpa import BPASpender
 from lib.keys import PrivateKey
 from lib.spender import Utxo, Destination
 
