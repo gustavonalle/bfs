@@ -56,7 +56,7 @@ class TestBPASpender(TestCase):
 
         spender = BPASpender()
         spender.add_utxos(utxo)
-        spender.add_destinations(Destination(9.96, "n2njoVpqeoCupZhqt8myDnWaLFzirbgHtQ"))
+        spender.add_destinations(Destination(9.96000001, "n2njoVpqeoCupZhqt8myDnWaLFzirbgHtQ"))
 
         tx_hex = spender.create_tx().hex()
 

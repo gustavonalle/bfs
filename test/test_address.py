@@ -50,3 +50,10 @@ class TestAddress(unittest.TestCase):
             # bech32 -> Hash160
             decoded_hash_160 = Bech32Address.from_address(address).hash160
             self.assertEqual(decoded_hash_160, hash160)
+
+    def test_satoshi_btc(self):
+        btc = 123456677.00000001
+        self.assertEqual(btc, satoshis_to_btc(btc_to_satoshis(btc)))
+
+        btc = 9.96
+        self.assertEqual(btc, satoshis_to_btc(btc_to_satoshis(btc)))

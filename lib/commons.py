@@ -1,6 +1,5 @@
 import hashlib
 import itertools
-import math
 from enum import Enum
 
 from lib.bech32 import decode
@@ -122,11 +121,11 @@ def to_wif(b, network, compressed=False):
 
 
 def btc_to_satoshis(btc):
-    return math.ceil(btc * 1e8)
+    return int(round(btc * 1e8))
 
 
 def satoshis_to_btc(satoshis):
-    return satoshis / 1e8
+    return float(satoshis / 1e8)
 
 
 def der(ecdsa):
