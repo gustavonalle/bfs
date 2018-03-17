@@ -13,11 +13,12 @@ Currently Bitcoin features supported:
 * Spend transactions with multiple inputs (P2PKH/P2PK/P2WPKH/P2SH-P2WPKH) and outputs (P2PKH/P2PK/P2WPKH)
 * RFC-6979 for deterministic ECDSA signature
 
-Hard forks supported:
+Bitcoin Forks supported:
 
 * [B2X](https://b2x-segwit.io) Segwit 2x
 * [BTN](http://btn.kim) Bitcoin New
 * [BPA](http://p.top) Bitcoin Pizza
+* [BTV](https://bitvote.one/) Bitcoin Vote
 
 
 ## Usage examples:
