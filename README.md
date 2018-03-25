@@ -19,6 +19,7 @@ Bitcoin Forks supported:
 * [BTN](http://btn.kim) Bitcoin New
 * [BPA](http://p.top) Bitcoin Pizza
 * [BTV](https://bitvote.one/) Bitcoin Vote
+* [BCI](https://www.bitcoininterest.io) Bitcoin Interest
 
 
 ## Usage examples:
