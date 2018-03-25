@@ -15,4 +15,3 @@ class BCISpender(Spender):
 class BCINetwork(Enum):
     MAIN_NET = b'\x66'
     TEST_NET = b'\x6f'
-
